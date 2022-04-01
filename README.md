@@ -26,6 +26,4 @@
 
    2）Redis服务；用以存储图形验证码相关信息
 
-项目地址：https://github.com/lajixiaohao/wei-admin-api
-
 联系邮箱：2壹7陆9柒4柒3零#qq.com
