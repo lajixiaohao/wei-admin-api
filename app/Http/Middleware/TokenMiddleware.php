@@ -5,7 +5,6 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use phpseclib\Crypt\RSA;
 
 class TokenMiddleware
 {
@@ -24,30 +23,21 @@ class TokenMiddleware
         }
 
         try {
-            $rsa = new RSA();
-            $rsa->loadKey(file_get_contents(storage_path('keys/pri.key')));
-            $rsa->setEncryptionMode(2);
-
-            $data = json_decode($rsa->decrypt(base64_decode($token)), true);
-            if (! $data) {
+            $token = openssl_decrypt($token, 'AES-256-ECB', env('TOKEN'));
+            if ($token === false) {
                 return response()->json(['code'=>2001, 'msg'=>'Token Involid']);
             }
 
-            //appkey验证
-            if ($data['appkey'] != env('APP_KEY')) {
+            $token = json_decode($token, true);
+
+            // 验证是否过期
+            if ($token['expire'] < time()) {
                 return response()->json(['code'=>2001, 'msg'=>'Token Involid']);
             }
 
-            //是否过期验证
-            if ((time() + $data['expire']) < time()) {
-                return response()->json(['code'=>2001, 'msg'=>'Token Involid']);
+            foreach ($token['data'] as $k => $v) {
+                $request->$k = $v;
             }
-
-            $request->adminId = $data['data']['admin_id'];
-            $request->roleId = $data['data']['role_id'];
-            $request->departmentId = $data['data']['department_id'];
-            $request->postId = $data['data']['post_id'];
-            $request->loginId = $data['data']['login_id'];
         } catch (\Exception $e) {
             return response()->json(['code'=>2001, 'msg'=>$e->getMessage()]);
         }

@@ -6,7 +6,6 @@ namespace App\Http\Controllers\V1;
 
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\DB;
-use phpseclib\Crypt\RSA;
 
 class Controller extends BaseController
 {
@@ -64,37 +63,18 @@ class Controller extends BaseController
     }
 
     /**
-    * 加密
+    * 使用私钥解密
+    * https://www.php.net/manual/zh/function.openssl-private-decrypt.php
     * @param string $str
     * @return string|bool
     */
-    protected function encryptData($str = '')
+    protected function rsaDecrypt($str = '')
     {
-        try {
-            $rsa = new RSA();
-            $rsa->loadKey(file_get_contents(storage_path('keys/pub.key')));
-            $rsa->setEncryptionMode(2);
-            return base64_encode($rsa->encrypt($str));
-        } catch (\Exception $e) {
-            return false;
+        if (openssl_private_decrypt(base64_decode($str), $res, file_get_contents(storage_path('keys/pri.key')))) {
+            return $res;
         }
-    }
 
-    /**
-    * 解密
-    * @param string $str
-    * @return string|bool
-    */
-    protected function decryptData($str = '')
-    {
-        try {
-            $rsa = new RSA();
-            $rsa->loadKey(file_get_contents(storage_path('keys/pri.key')));
-            $rsa->setEncryptionMode(2);
-            return $rsa->decrypt(base64_decode($str));
-        } catch (\Exception $e) {
-            return false;
-        }
+        return false;
     }
 
     /**
@@ -141,14 +121,17 @@ class Controller extends BaseController
     }
 
     /**
-    * 登录账号验证
+    * 登录账号验证，支持111位手机号^(13[0-9]|14[5|7]|15[0|1|2|3|4|5|6|7|8|9]|18[0|1|2|3|5|6|7|8|9])\d{8}$
     * 长度5~20
     * @param string $account
     * @return bool
     */
     protected function isValidAccount($account = '')
     {
-        if (preg_match('/^[a-zA-Z][a-zA-Z0-9_]{4,19}$/', $account) === 1) {
+        $m1 = '/^[a-zA-Z][a-zA-Z0-9_]{4,19}$/';
+        $m2 = '/^(13[0-9]|14[5|7]|15[0|1|2|3|4|5|6|7|8|9]|18[0|1|2|3|5|6|7|8|9])\d{8}$/';
+
+        if (preg_match($m1, $account) === 1 || preg_match($m2, $account) === 1) {
             return true;
         }
 
