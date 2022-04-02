@@ -19,7 +19,7 @@ class LogController extends Controller
     {
         $page = $this->request->input('page', 1);
         $size = $this->request->input('size', 10);
-        $offset = (($page * $size) - $size);
+        $offset = ($page * $size) - $size;
 
         $where = [];
 
@@ -57,7 +57,7 @@ class LogController extends Controller
     {
         $page = $this->request->input('page', 1);
         $size = $this->request->input('size', 10);
-        $offset = (($page * $size) - $size);
+        $offset = ($page * $size) - $size;
 
         $where = [];
 

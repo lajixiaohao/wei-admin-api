@@ -20,7 +20,7 @@ class PostController extends Controller
     {
         $page = $this->request->input('page', 1);
         $size = $this->request->input('size', 10);
-        $offset = (($page * $size) - $size);
+        $offset = ($page * $size) - $size;
 
         $where = [];
 
@@ -30,17 +30,15 @@ class PostController extends Controller
             $where[] = ['name', 'like', '%'.$name.'%'];
         }
 
-        $list = DB::table('admin_posts')
+        $data['list'] = DB::table('admin_posts')
           ->where($where)
           ->offset($offset)
           ->limit($size)
           ->orderBy('sort')
-          ->get()->toArray();
-        $count = DB::table('admin_posts')
-          ->where($where)
-        ->count();
+          ->get();
+        $data['count'] = DB::table('admin_posts')->where($where)->count();
         
-        return response()->json($this->success(['list'=>$list, 'count'=>$count]));
+        return response()->json($this->success($data));
     }
 
     /**

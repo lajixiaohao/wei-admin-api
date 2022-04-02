@@ -84,6 +84,12 @@ $router->group(['namespace'=>'V1', 'prefix'=>'api'], function () use ($router) {
 		//<加密应用
 		$router->get('encryption/rsa', 'EncryptionController@rsa');
 		//^>
+		//<组织机构
+		$router->get('organization/list', 'OrganizationController@list');
+		$router->post('organization/add', 'OrganizationController@add');
+		$router->post('organization/edit', 'OrganizationController@edit');
+		$router->post('organization/remove', 'OrganizationController@remove');
+		//^>
 	});
 	//^>
 });
