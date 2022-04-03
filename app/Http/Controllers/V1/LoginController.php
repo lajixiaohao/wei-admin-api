@@ -71,19 +71,8 @@ class LoginController extends Controller
             ['id', '=', $admin->role_id],
             ['is_able', '=', 1]
         ];
-        $role = DB::table('admin_roles')->where($where)->select('organization_id')->first();
-        if (! $role) {
+        if (! DB::table('admin_roles')->where($where)->exists()) {
             return response()->json($this->fail('权限验证失败'));
-        }
-
-        // 组织验证
-        $where = [
-            ['id', '=', $role->organization_id],
-            ['is_able', '=', 1],
-            ['is_deleted', '=', 0]
-        ];
-        if ($admin->role_id !== 1 && ! DB::table('admin_organizations')->where($where)->exists()) {
-            return response()->json($this->fail('组织验证失败'));
         }
 
         // 登录日志
@@ -104,7 +93,6 @@ class LoginController extends Controller
             'data'=>[
                 'adminId'=>$admin->id,
                 'roleId'=>$admin->role_id,
-                'organizationId'=>$role->organization_id,
                 'departmentId'=>$admin->department_id,
                 'postId'=>$admin->post_id,
                 'loginId'=>$loginId

@@ -129,7 +129,7 @@ class PostController extends Controller
             return response()->json($this->success([], '删除成功'));
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json($this->fail($this->errMessage.'('.__LINE__.')'));
+            return response()->json($this->fail($this->errMessage));
         }
 
         return response()->json($this->fail('删除失败'));

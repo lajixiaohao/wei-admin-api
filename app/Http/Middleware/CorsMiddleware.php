@@ -4,6 +4,8 @@
 */
 namespace App\Http\Middleware;
 use Closure;
+use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\Response as symfonyResponse;
 
 class CorsMiddleware
 {
@@ -30,15 +32,27 @@ class CorsMiddleware
      */
     private function addCorsHeaders($request, $response)
     {
-        foreach ([
+        $headers = [
             'Access-Control-Allow-Origin'=>'*',
-            'Access-Control-Max-Age'=>86400,
             'Access-Control-Allow-Headers'=>$request->header('access-control-request-headers'),
-            'Access-Control-Allow-Methods'=>'GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS',
-            'Access-Control-Allow-Credentials'=>'true',
-            'Cache-Control'=>'no-store'
-        ] as $header => $value) {
-            $response->header($header, $value);
+            'Access-Control-Allow-Methods'=>'GET, POST, OPTIONS',
+            'Access-Control-Allow-Credentials'=>true
+        ];
+
+        if ($response instanceof JsonResponse) {
+            foreach ($headers as $key => $value) {
+                $response->header($key, $value);
+            }
+            return $response;
+        }
+
+        if ($response instanceof symfonyResponse) {
+            // 兼容axios headers接受不到Content-Disposition问题
+            $headers['Access-Control-Expose-Headers'] = 'Content-Disposition';
+            foreach ($headers as $key => $value) {
+                $response->headers->set($key, $value);
+            }
+            return $response;
         }
 
         return $response;

@@ -1,13 +1,17 @@
 <?php
 /**
 * 权限验证
+* 验证不通过，将返回HTTP状态码：403
 */
 namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Support\Facades\DB;
+use App\Helps\ApiResponse;
 
 class AuthMiddleware
 {
+    use ApiResponse;
+
     /**
      * Handle an incoming request.
      *
@@ -18,7 +22,7 @@ class AuthMiddleware
     public function handle($request, Closure $next)
     {
         try {
-            if ($request->roleId != 1) {
+            if ($request->roleId !== 1) {
                 $path = str_replace('/', ':', $request->path());
 
                 $where = [
@@ -30,11 +34,11 @@ class AuthMiddleware
                     ->where($where)
                     ->exists();
                 if (! $has) {
-                    return response()->json(['code'=>1, 'msg'=>'403 Forbidden'], 403);
+                    return response()->json($this->fail('403 Forbidden'), 403);
                 }
             }
         } catch (\Exception $e) {
-            return response()->json(['code'=>1, 'msg'=>'403 Forbidden'], 403);
+            return response()->json($this->fail($this->errMessage), 403);
         }
 
         return $next($request);

@@ -6,14 +6,14 @@ namespace App\Http\Controllers\V1;
 
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\DB;
+use App\Helps\ApiResponse;
 
 class Controller extends BaseController
 {
+    use ApiResponse;
+
     //Illuminate\Http\Request对象
     protected $request = null;
-
-    //try catch发生错误统一返回的提示
-    protected $errMessage = '服务器发生错误';
 
     /**
     * 记录操作日志
@@ -33,33 +33,6 @@ class Controller extends BaseController
             $field['created_at'] = $field['updated_at'] = date('Y-m-d H:i:s');
             DB::table('admin_operation_logs')->insert($field);
         } catch (\Exception $e) {}
-    }
-
-    /**
-    * 返回成功code=0
-    * @param array $data
-    * @param string $msg
-    * @return array
-    */
-    protected function success($data = [], $msg = 'success')
-    {
-        $ret = ['code'=>0, 'msg'=>$msg];
-
-        if ($data) {
-            $ret['data'] = $data;
-        }
-
-        return $ret;
-    }
-
-    /**
-    * 返回失败code=1
-    * @param string $msg
-    * @return array
-    */
-    protected function fail($msg = 'error')
-    {
-        return ['code'=>1, 'msg'=>$msg];
     }
 
     /**
