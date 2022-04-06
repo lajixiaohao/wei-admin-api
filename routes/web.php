@@ -68,7 +68,7 @@ $router->group(['namespace'=>'V1', 'prefix'=>'api'], function () use ($router) {
 		//<^日志管理
 		$router->get('log/operation', 'LogController@operation');
 		$router->get('log/login', 'LogController@login');
-		$router->get('log/login/export', 'LogController@exportLoginLog');
+		$router->get('log/operation/export', 'LogController@exportOperationLog');
 		//^>
 		//<^部门管理
 		$router->get('department/tree', 'DepartmentController@tree');
