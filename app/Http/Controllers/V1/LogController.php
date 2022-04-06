@@ -152,7 +152,7 @@ class LogController extends Controller
                 $tableHtml .= '</tr>';
             }
         } else {
-            $tableHtml .= '<tr colspan="7">暂无数据</tr>';
+            $tableHtml .= '<tr><td colspan="7">暂无数据</td></tr>';
         }
 
         $tableHtml .= '</table>';

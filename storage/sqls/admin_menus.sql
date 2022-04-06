@@ -35,7 +35,7 @@ CREATE TABLE `admin_menus`  (
   `sort` tinyint(1) UNSIGNED NOT NULL DEFAULT 1 COMMENT '排序',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `path`(`path`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 39 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 40 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of admin_menus
@@ -75,8 +75,9 @@ INSERT INTO `admin_menus` VALUES (32, 31, '登录日志', '/log/login', 'LoginLo
 INSERT INTO `admin_menus` VALUES (33, 31, '操作日志', '/log/operation', 'OperationLog', 'log/operation/index', 1, 'operation_log', 1, 1, 2);
 INSERT INTO `admin_menus` VALUES (34, 32, '列表', 'api:log:login', NULL, NULL, 0, NULL, 3, 0, 1);
 INSERT INTO `admin_menus` VALUES (35, 33, '列表', 'api:log:operation', NULL, NULL, 0, NULL, 3, 0, 1);
-INSERT INTO `admin_menus` VALUES (36, 0, '加密应用', '', '', '', 0, 'encryption_1', 1, 1, 2);
-INSERT INTO `admin_menus` VALUES (37, 36, '非对称加密', '/encryption/rsa', 'RsaEncryption', 'encryption/rsa', 1, 'encryption_2', 1, 1, 1);
-INSERT INTO `admin_menus` VALUES (38, 37, '生成密钥', 'api:encryption:rsa', NULL, NULL, 0, NULL, 3, 0, 1);
+INSERT INTO `admin_menus` VALUES (36, 33, '导出表格', 'api:log:operation:export', NULL, NULL, 0, NULL, 3, 0, 2);
+INSERT INTO `admin_menus` VALUES (37, 0, '加密应用', '', '', '', 0, 'encryption_1', 1, 1, 2);
+INSERT INTO `admin_menus` VALUES (38, 37, '非对称加密', '/encryption/rsa', 'RsaEncryption', 'encryption/rsa', 1, 'encryption_2', 1, 1, 1);
+INSERT INTO `admin_menus` VALUES (39, 38, '生成密钥', 'api:encryption:rsa', NULL, NULL, 0, NULL, 3, 0, 1);
 
 SET FOREIGN_KEY_CHECKS = 1;

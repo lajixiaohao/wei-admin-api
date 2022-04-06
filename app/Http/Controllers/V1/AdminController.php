@@ -379,7 +379,7 @@ class AdminController extends Controller
         }
 
         //密码
-        $pwd = $this->decryptData($this->request->input('pwd', ''));
+        $pwd = $this->rsaDecrypt($this->request->input('pwd', ''));
         if (! $this->isValidPassword($pwd)){
             return response()->json($this->fail('密码输入有误'));
         }
