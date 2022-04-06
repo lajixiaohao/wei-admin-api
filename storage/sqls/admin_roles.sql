@@ -35,6 +35,6 @@ CREATE TABLE `admin_roles`  (
 -- ----------------------------
 -- Records of admin_roles
 -- ----------------------------
-INSERT INTO `admin_roles` VALUES (1, 0, '超级管理员', '超级管理员，拥有系统所有权限', 1, '2021-08-01 00:00:00', '2021-08-01 00:00:00');
+INSERT INTO `admin_roles` VALUES (1, 0, '超级管理员', '超级管理员，拥有系统所有权限', 1, '2022-04-06 00:00:00', '2022-04-06 00:00:00');
 
 SET FOREIGN_KEY_CHECKS = 1;

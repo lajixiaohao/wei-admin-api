@@ -39,6 +39,6 @@ CREATE TABLE `admin_users`  (
 -- ----------------------------
 -- Records of admin_users
 -- ----------------------------
-INSERT INTO `admin_users` VALUES (1, 0, 'admin', '$2y$10$7TkaK1lM0RqZ0x5mIogmceQu5KTiSoqQdk0yGq.rmqI4jhbl2ulOa', 'Administrator', 1, 1, 0, 1, '2021-08-01 00:00:00', '2021-08-01 00:00:00');
+INSERT INTO `admin_users` VALUES (1, 0, 'admin', '$2y$10$7TkaK1lM0RqZ0x5mIogmceQu5KTiSoqQdk0yGq.rmqI4jhbl2ulOa', 'Administrator', 1, 1, 0, 1, '2022-04-06 00:00:00', '2022-04-06 00:00:00');
 
 SET FOREIGN_KEY_CHECKS = 1;
