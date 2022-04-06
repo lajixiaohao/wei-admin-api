@@ -137,7 +137,7 @@ class LogController extends Controller
             ->toArray();
 
         $tableHtml = '<table border="1"><tr><th>序号</th><th>管理员</th><th>API标识</th><th>IP</th><th>描述</th><th>操作设备</th><th>创建时间</th></tr>';
-        $styleHtml = '.c1{color:#67C23A;}.c2{color:#F56C6C;}';
+        $styleHtml = '';
 
         if ($data) {
             foreach ($data as $k => $v) {
