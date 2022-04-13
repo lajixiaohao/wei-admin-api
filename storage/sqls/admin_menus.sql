@@ -69,7 +69,7 @@ INSERT INTO `admin_menus` VALUES (26, 4, '管理员关系树', 'api:admin:tree',
 INSERT INTO `admin_menus` VALUES (27, 4, '重置密码', 'api:admin:modify-password', NULL, NULL, 0, NULL, 3, 0, 6);
 INSERT INTO `admin_menus` VALUES (28, 4, '变更下级接管账号', 'api:admin:change-takeover', NULL, NULL, 0, NULL, 3, 0, 7);
 INSERT INTO `admin_menus` VALUES (29, 0, '富文本编辑器', '', '', '', 0, 'fulltext_1', 1, 1, 3);
-INSERT INTO `admin_menus` VALUES (30, 29, 'wangeditor', '/wangeditor', 'WangEditor', 'rich_text/wangeditor', 1, 'fulltext_2', 1, 1, 1);
+INSERT INTO `admin_menus` VALUES (30, 29, 'wangeditor', '/wangeditor', 'WangEditorDemo', 'rich_text/wangeditor_demo', 1, 'fulltext_2', 1, 1, 1);
 INSERT INTO `admin_menus` VALUES (31, 0, '日志管理', '', '', '', 0, 'log', 1, 1, 4);
 INSERT INTO `admin_menus` VALUES (32, 31, '登录日志', '/log/login', 'LoginLog', 'log/login/index', 1, 'login_log', 1, 1, 1);
 INSERT INTO `admin_menus` VALUES (33, 31, '操作日志', '/log/operation', 'OperationLog', 'log/operation/index', 1, 'operation_log', 1, 1, 2);

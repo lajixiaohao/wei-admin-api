@@ -3,7 +3,7 @@
  * 文件上传
  * nginx应配置好client_max_body_size
  * php.ini应配置好upload_max_filesize,post_max_size
- * 2021.7.30
+ * 2022.4.13
  */
 namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;
@@ -32,38 +32,33 @@ class UploadFileController extends Controller
     */
     public function image()
     {
-        //wangeditor编辑器返回格式
-        $ret = ['errno'=>0, 'data'=>[], 'relative_path'=>''];
-
         try {
-            $filename = 'weifile';
+            $filename = 'file';
             if ($this->request->hasFile($filename) && $this->request->file($filename)->isValid()) {
                 $extension = $this->request->file($filename)->extension();
                 if (! in_array($extension, $this->allowImageExtension)) {
-                    $ret['msg'] = '不支持的上传类型';
-                    return response()->json($ret);
+                    return response()->json($this->fail('不支持的图片类型'));
                 }
 
                 $size = $this->request->file($filename)->getSize();
                 if ($size > $this->allowImageSize) {
-                    $ret['msg'] = '文件超出预设大小:'.$this->allowImageSize;
-                    return response()->json($ret);
+                    // 提示文案，应保持与$allowImageSize对应
+                    return response()->json($this->fail('图片不能超过5M'));
                 }
 
                 $dir = 'images/'.date('Y').'/'.date('m');
                 $path = Storage::disk(env('IMAGE_DISK', 'local'))->putFile($dir, $this->request->file($filename));
                 if ($path) {
-                    $imgUrl = env('RESOURCE_URL', '').$path;
-                    $this->recordLog('上传图片，图片地址：'.$imgUrl);
-                    $ret['data'][] = $imgUrl;
-                    $ret['relative_path'] = $path;
+                    $url = env('RESOURCE_URL', '').$path;
+                    $this->recordLog('上传图片：'.$url);
+                    return response()->json($this->success(['url'=>$url]));
                 }
             }
         } catch (\Exception $e) {
-            $ret['msg'] = $e->getMessage();
+            return response()->json($this->fail($this->errMessage));
         }
 
-        return response()->json($ret);
+        return response()->json($this->fail());
     }
 
     /**
@@ -71,37 +66,32 @@ class UploadFileController extends Controller
     */
     public function video()
     {
-        //wangeditor编辑器返回格式
-        $ret = ['errno'=>0, 'data'=>['url'=>''], 'relative_path'=>''];
-
         try {
-            $filename = 'weivideo';
+            $filename = 'file';
             if ($this->request->hasFile($filename) && $this->request->file($filename)->isValid()) {
                 $extension = $this->request->file($filename)->extension();
                 if (! in_array($extension, $this->allowVideoExtension)) {
-                    $ret['msg'] = '不支持的上传类型';
-                    return response()->json($ret);
+                    return response()->json($this->fail('不支持的视频类型'));
                 }
 
                 $size = $this->request->file($filename)->getSize();
                 if ($size > $this->allowVideoSize) {
-                    $ret['msg'] = '文件超出预设大小:'.$this->allowVideoSize;
-                    return response()->json($ret);
+                    // 提示文案，应保持与$allowVideoSize对应
+                    return response()->json($this->fail('图片不能超过50M'));
                 }
 
                 $dir = 'videos/'.date('Y').'/'.date('m');
                 $path = Storage::disk(env('VIDEO_DISK', 'local'))->putFile($dir, $this->request->file($filename));
                 if ($path) {
                     $url = env('RESOURCE_URL', '').$path;
-                    $this->recordLog('上传视频，视频地址：'.$url);
-                    $ret['data']['url'] = $url;
-                    $ret['relative_path'] = $path;
+                    $this->recordLog('上传视频：'.$url);
+                    return response()->json($this->success(['url'=>$url]));
                 }
             }
         } catch (\Exception $e) {
-            $ret['msg'] = $e->getMessage();
+            return response()->json($this->fail($this->errMessage));
         }
 
-        return response()->json($ret);
+        return response()->json($this->fail());
     }
 }

@@ -94,17 +94,14 @@ class Controller extends BaseController
     }
 
     /**
-    * 登录账号验证，支持111位手机号^(13[0-9]|14[5|7]|15[0|1|2|3|4|5|6|7|8|9]|18[0|1|2|3|5|6|7|8|9])\d{8}$
+    * 账号验证
     * 长度5~20
-    * @param string $account
+    * @param string $str
     * @return bool
     */
-    protected function isValidAccount($account = '')
+    protected function isValidAccount($str = '')
     {
-        $m1 = '/^[a-zA-Z][a-zA-Z0-9_]{4,19}$/';
-        $m2 = '/^(13[0-9]|14[5|7]|15[0|1|2|3|4|5|6|7|8|9]|18[0|1|2|3|5|6|7|8|9])\d{8}$/';
-
-        if (preg_match($m1, $account) === 1 || preg_match($m2, $account) === 1) {
+        if (preg_match('/^[a-zA-Z][a-zA-Z0-9_]{4,19}$/', $str)) {
             return true;
         }
 
@@ -114,12 +111,12 @@ class Controller extends BaseController
     /**
     * 密码验证
     * 长度6~10
-    * @param string $pwd
+    * @param string $str
     * @return bool
     */
-    protected function isValidPassword($pwd = '')
+    protected function isValidPassword($str = '')
     {
-        if (preg_match('/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,10}$/', $pwd) === 1) {
+        if (preg_match('/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,10}$/', $str) === 1) {
             return true;
         }
 

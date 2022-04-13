@@ -25,7 +25,7 @@ CREATE TABLE `admin_departments`  (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `parent_id` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '父级ID',
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '部门名称',
-  `sort` tinyint(1) UNSIGNED NOT NULL DEFAULT 1 COMMENT '排序',
+  `sort` int(10) UNSIGNED NOT NULL DEFAULT 1 COMMENT '排序',
   `is_able` tinyint(1) UNSIGNED NOT NULL DEFAULT 1 COMMENT '状态',
   `created_at` datetime(0) NULL DEFAULT NULL,
   `updated_at` datetime(0) NULL DEFAULT NULL,

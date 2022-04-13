@@ -101,7 +101,7 @@ class PostController extends Controller
             return response()->json($this->fail('编辑失败'));
         }
 
-        $this->recordLog('编辑岗位：，id='.$id);
+        $this->recordLog('编辑岗位id='.$id);
 
         return response()->json($this->success([], '编辑成功'));
     }
