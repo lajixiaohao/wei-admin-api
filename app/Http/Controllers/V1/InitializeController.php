@@ -9,12 +9,12 @@ use Illuminate\Support\Facades\DB;
 
 class InitializeController extends Controller
 {
+     // 获取菜单需要取出的字段
+    private $field = ['id','title','path','componentName','componentPath','isCache','icon'];
+
     public function __construct(Request $request) {
         $this->request = $request;
     }
-
-    //需要取出的字段
-    // private $field = ['id','title','path','component_name','component_path','is_cache','icon'];
 
     /**
     * 初始化信息
@@ -30,6 +30,7 @@ class InitializeController extends Controller
 
     /**
     * 获取角色菜单
+    * @return array
     */
     private function _getRoleMenu()
     {
@@ -39,18 +40,18 @@ class InitializeController extends Controller
         $where = [
             ['parentId', '=', 0],
             ['isShow', '=', 1],
-            ['type', '<>', 3]
+            ['type', '=', 1]
         ];
 
         if ($this->request->roleId === 1) {
-            $data = DB::table('sys_menus')->where($where)->orderBy('sort')->get()->toArray();
+            $data = DB::table('sys_menus')->where($where)->select($this->field)->orderBy('sort')->get()->toArray();
         } else {
             $menu = DB::table('sys_role_permissions')->where('roleId', $this->request->roleId)->select('menuId')->get()->toArray();
             if ($menu) {
                 $ids = array_map(function ($item) {
                     return $item->menuId;
                 }, $menu);
-                $data = DB::table('sys_menus')->whereIn('id', $ids)->where($where)->orderBy('sort')->get()->toArray();
+                $data = DB::table('sys_menus')->whereIn('id', $ids)->where($where)->select($this->field)->orderBy('sort')->get()->toArray();
             }
         }
 
@@ -62,40 +63,11 @@ class InitializeController extends Controller
         }
 
         return $data;
-        /*$where = [
-            ['parent_id','=',0],
-            ['is_show','=',1],
-            ['menu_type','=',1]
-        ];
-
-        //一级菜单+所属权限菜单ID
-        $data = $ids = [];
-
-        if ($this->request->roleId == 1) {
-            $data = DB::table('admin_menus')->where($where)->select($this->field)->orderBy('sort')->get()->toArray();
-        } else {
-            //非超管
-            $menu = DB::table('admin_role_permissions')->where('role_id', $this->request->roleId)->select('menu_id')->get()->toArray();
-            if ($menu) {
-                foreach ($menu as $v) {
-                    $ids[] = $v->menu_id;
-                }
-                $data = DB::table('admin_menus')->whereIn('id', $ids)->where($where)->select($this->field)->orderBy('sort')->get()->toArray();
-            }
-        }
-
-        if ($data) {
-            foreach ($data as $k => $v) {
-                $data[$k]->children = $this->_getSecondMenu($v->id, $ids);
-            }
-        }
-
-        return $data;*/
     }
 
     /**
-    * 获取下级菜单，允许无限级
-    * @param int $parent_id
+    * 获取下级菜单
+    * @param int $parentId
     * @param array $ids
     * @return array
     */
@@ -106,7 +78,7 @@ class InitializeController extends Controller
             ['isShow', '=', 1],
             ['type', '=', 1]
         ];
-        $data = DB::table('sys_menus')->where($where)->orderBy('sort')->get()->toArray();
+        $data = DB::table('sys_menus')->select($this->field)->where($where)->orderBy('sort')->get()->toArray();
         if ($data) {
             foreach ($data as $k => $v) {
                 if ($ids && ! in_array($v->id, $ids)) {
@@ -119,29 +91,11 @@ class InitializeController extends Controller
         }
 
         return array_values($data);
-        /*$where = [
-            ['parent_id','=',$parent_id],
-            ['is_show','=',1],
-            ['menu_type','=',1]
-        ];
-        $data = DB::table('admin_menus')->where($where)->select($this->field)->orderBy('sort')->get()->toArray();
-        if ($data) {
-            foreach ($data as $k => $v) {
-                if ($ids && ! in_array($v->id, $ids)) {
-                    unset($data[$k]);
-                    continue;
-                }
-                //页面按钮级菜单
-                $data[$k]->children = $this->_getPageMenu($v->id);
-            }
-        }
-
-        return array_values($data);*/
     }
 
     /**
     * 获取页面按钮级菜单
-    * @param int $parent_id
+    * @param int $parentId
     * @return json
     */
     private function _getPageMenu($parentId = 0)
@@ -151,6 +105,6 @@ class InitializeController extends Controller
             ['isShow', '=', 1],
             ['type', '=', 2]
         ];
-        return DB::table('sys_menus')->where($where)->orderBy('sort')->get();
+        return DB::table('sys_menus')->where($where)->select($this->field)->orderBy('sort')->get();
     }
 }
