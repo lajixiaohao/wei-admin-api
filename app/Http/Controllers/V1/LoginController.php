@@ -54,35 +54,42 @@ class LoginController extends Controller
         }
 
         $where = [
-            ['account','=',$account],
-            ['is_able','=',1]
+            ['account', '=', $account],
+            ['isAble', '=', 1]
         ];
         // 管理员信息
-        $admin = DB::table('admin_users')->where($where)->first();
+        $admin = DB::table('sys_administrators')->where($where)->first();
         if (! $admin) {
             return response()->json($this->fail('账号无效'));
         }
+
+        // 验证锁定
+        if ($admin->isLocked === 1) {
+            return response()->json($this->fail('该账号已被锁定'));
+        }
+
+        // 验证密码
         if (! password_verify($pwd, $admin->pwd)) {
             return response()->json($this->fail('密码不正确'));
         }
 
         // 角色验证
         $where = [
-            ['id', '=', $admin->role_id],
-            ['is_able', '=', 1]
+            ['id', '=', $admin->roleId],
+            ['isAble', '=', 1]
         ];
-        if (! DB::table('admin_roles')->where($where)->exists()) {
+        if (! DB::table('sys_roles')->where($where)->exists()) {
             return response()->json($this->fail('权限验证失败'));
         }
 
         // 登录日志
         $field = [
-            'admin_id'=>$admin->id,
-            'ip'=>$this->request->getClientIp(),
+            'adminId'=>$admin->id,
+            'ip'=>inet_pton($this->request->getClientIp()),
             'device'=>$this->request->userAgent(),
-            'login_at'=>date('Y-m-d H:i:s')
+            'loginAt'=>time()
         ];
-        $loginId = DB::table('admin_login_logs')->insertGetId($field);
+        $loginId = DB::table('sys_login_logs')->insertGetId($field);
         if ($loginId <= 0) {
             return response()->json($this->fail('登录失败，无法更新登录日志'));
         }
@@ -92,9 +99,9 @@ class LoginController extends Controller
             'expire'=>time() + $this->tokenExpire,
             'data'=>[
                 'adminId'=>$admin->id,
-                'roleId'=>$admin->role_id,
-                'departmentId'=>$admin->department_id,
-                'postId'=>$admin->post_id,
+                'roleId'=>$admin->roleId,
+                'deptId'=>$admin->deptId,
+                'postId'=>$admin->postId,
                 'loginId'=>$loginId
             ]
         ];

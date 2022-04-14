@@ -1,7 +1,7 @@
 <?php
 /**
- * 初始化
- * 2021.7.20
+ * 初始化获取菜单和账户
+ * 2022.4.14
  */
 namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;
@@ -14,18 +14,16 @@ class InitializeController extends Controller
     }
 
     //需要取出的字段
-    private $field = ['id','title','path','component_name','component_path','is_cache','icon'];
+    // private $field = ['id','title','path','component_name','component_path','is_cache','icon'];
 
     /**
     * 初始化信息
     */
     public function index()
     {
-        $account = '';
-        $data = DB::table('admin_users')->where('id', $this->request->adminId)->select('account', 'true_name')->first();
-        if ($data) {
-            $account = $data->true_name ? $data->true_name : $data->account;
-        }
+        // token验证通过，断定管理员存在
+        $data = DB::table('sys_administrators')->where('id', $this->request->adminId)->select('account', 'trueName')->first();
+        $account = $data->trueName ? $data->trueName : $data->account;
 
         return response()->json($this->success(['menus'=>$this->_getRoleMenu(), 'account'=>$account]));
     }
@@ -35,7 +33,36 @@ class InitializeController extends Controller
     */
     private function _getRoleMenu()
     {
+        // 菜单、非超管菜单id
+        $data = $ids = [];
+
         $where = [
+            ['parentId', '=', 0],
+            ['isShow', '=', 1],
+            ['type', '<>', 3]
+        ];
+
+        if ($this->request->roleId === 1) {
+            $data = DB::table('sys_menus')->where($where)->orderBy('sort')->get()->toArray();
+        } else {
+            $menu = DB::table('sys_role_permissions')->where('roleId', $this->request->roleId)->select('menuId')->get()->toArray();
+            if ($menu) {
+                $ids = array_map(function ($item) {
+                    return $item->menuId;
+                }, $menu);
+                $data = DB::table('sys_menus')->whereIn('id', $ids)->where($where)->orderBy('sort')->get()->toArray();
+            }
+        }
+
+        if ($data) {
+            foreach ($data as $k => $v) {
+                $data[$k]->pageMenu = $this->_getPageMenu($v->id);
+                $data[$k]->children = $this->_getChildMenu($v->id, $ids);
+            }
+        }
+
+        return $data;
+        /*$where = [
             ['parent_id','=',0],
             ['is_show','=',1],
             ['menu_type','=',1]
@@ -63,18 +90,36 @@ class InitializeController extends Controller
             }
         }
 
-        return $data;
+        return $data;*/
     }
 
     /**
-    * 获取二级菜单
+    * 获取下级菜单，允许无限级
     * @param int $parent_id
     * @param array $ids
     * @return array
     */
-    private function _getSecondMenu($parent_id = 0, $ids = [])
+    private function _getChildMenu($parentId = 0, $ids = [])
     {
         $where = [
+            ['parentId', '=', $parentId],
+            ['isShow', '=', 1],
+            ['type', '=', 1]
+        ];
+        $data = DB::table('sys_menus')->where($where)->orderBy('sort')->get()->toArray();
+        if ($data) {
+            foreach ($data as $k => $v) {
+                if ($ids && ! in_array($v->id, $ids)) {
+                    unset($data[$k]);
+                    continue;
+                }
+                $data[$k]->pageMenu = $this->_getPageMenu($v->id);
+                $data[$k]->children = $this->_getChildMenu($v->id, $ids);
+            }
+        }
+
+        return array_values($data);
+        /*$where = [
             ['parent_id','=',$parent_id],
             ['is_show','=',1],
             ['menu_type','=',1]
@@ -91,7 +136,7 @@ class InitializeController extends Controller
             }
         }
 
-        return array_values($data);
+        return array_values($data);*/
     }
 
     /**
@@ -99,13 +144,13 @@ class InitializeController extends Controller
     * @param int $parent_id
     * @return json
     */
-    private function _getPageMenu($parent_id = 0)
+    private function _getPageMenu($parentId = 0)
     {
         $where = [
-            ['parent_id','=',$parent_id],
-            ['is_show','=',1],
-            ['menu_type','=',2]
+            ['parentId', '=', $parentId],
+            ['isShow', '=', 1],
+            ['type', '=', 2]
         ];
-        return DB::table('admin_menus')->where($where)->select($this->field)->orderBy('sort')->get();
+        return DB::table('sys_menus')->where($where)->orderBy('sort')->get();
     }
 }

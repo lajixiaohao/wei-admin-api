@@ -15,7 +15,7 @@ class LogoutController extends Controller
 
     public function index()
     {
-        DB::table('admin_login_logs')->where('id', $this->request->loginId)->update(['remark'=>'正常退出', 'logout_at'=>date('Y-m-d H:i:s')]);
+        DB::table('sys_login_logs')->where('id', $this->request->loginId)->update(['logoutAt'=>time()]);
 
         return response()->json($this->success([], '退出成功'));
     }
