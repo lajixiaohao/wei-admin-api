@@ -71,10 +71,11 @@ $router->group(['namespace'=>'V1', 'prefix'=>'api'], function () use ($router) {
 		$router->get('log/operation/export', 'LogController@exportOperationLog');
 		//^>
 		//<^部门管理
-		$router->get('department/tree', 'DepartmentController@tree');
-		$router->post('department/add', 'DepartmentController@add');
-		$router->post('department/edit', 'DepartmentController@edit');
-		$router->post('department/remove', 'DepartmentController@remove');
+		$router->get('dept/index', 'DeptController@index');
+		// $router->get('department/tree', 'DepartmentController@tree');
+		// $router->post('department/add', 'DepartmentController@add');
+		// $router->post('department/edit', 'DepartmentController@edit');
+		// $router->post('department/remove', 'DepartmentController@remove');
 		//^>
 		//<^岗位管理
 		$router->get('post/list', 'PostController@list');

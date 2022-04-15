@@ -20,8 +20,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 -- Table structure for sys_administrators
 -- ----------------------------
-DROP TABLE IF EXISTS `sys_administrators`;
-CREATE TABLE `sys_administrators`  (
+DROP TABLE IF EXISTS `sys_admins`;
+CREATE TABLE `sys_admins`  (
   `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `parentId` int UNSIGNED NOT NULL DEFAULT 0 COMMENT '父级ID',
   `account` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '登录账号',
@@ -39,9 +39,9 @@ CREATE TABLE `sys_administrators`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '管理员表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of sys_administrators
+-- Records of sys_admins
 -- ----------------------------
-INSERT INTO `sys_administrators` VALUES (1, 0, 'admin', '$2y$10$7TkaK1lM0RqZ0x5mIogmceQu5KTiSoqQdk0yGq.rmqI4jhbl2ulOa', 'Administrator', 1, 1, 0, 0, 1, 0, 1649910541, 1649910541);
-INSERT INTO `sys_administrators` VALUES (2, 0, 'development', '$2y$10$7TkaK1lM0RqZ0x5mIogmceQu5KTiSoqQdk0yGq.rmqI4jhbl2ulOa', NULL, 2, 0, 0, 0, 1, 0, 1649910541, 1649910541);
+INSERT INTO `sys_admins` VALUES (1, 0, 'admin', '$2y$10$7TkaK1lM0RqZ0x5mIogmceQu5KTiSoqQdk0yGq.rmqI4jhbl2ulOa', 'Administrator', 1, 1, 0, 0, 1, 0, 1649910541, 1649910541);
+INSERT INTO `sys_admins` VALUES (2, 1, 'development', '$2y$10$7TkaK1lM0RqZ0x5mIogmceQu5KTiSoqQdk0yGq.rmqI4jhbl2ulOa', NULL, 2, 0, 0, 0, 1, 0, 1649910541, 1649910541);
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -24,14 +24,15 @@ class Controller extends BaseController
     {
         try {
             $field = [
-                'admin_id'=>$this->request->adminId,
+                'adminId'=>$this->request->adminId,
                 'api'=>str_replace('/', ':', $this->request->path()),
                 'describe'=>$describe,
                 'ip'=>$this->request->getClientIp(),
+                'requestJson'=>json_encode($this->request->all()),
                 'device'=>$this->request->userAgent(),
+                'createdAt'=>time()
             ];
-            $field['created_at'] = $field['updated_at'] = date('Y-m-d H:i:s');
-            DB::table('admin_operation_logs')->insert($field);
+            DB::table('sys_operation_logs')->insert($field);
         } catch (\Exception $e) {}
     }
 
@@ -56,7 +57,7 @@ class Controller extends BaseController
     * @param array $ids
     * @return array
     */
-    protected function getDepartmentSubordinateId($id = 0, $ids = [])
+    /*protected function getDepartmentSubordinateId($id = 0, $ids = [])
     {
         if ($id <= 0) {
             return [];
@@ -77,7 +78,7 @@ class Controller extends BaseController
         }
 
         return $ids;
-    }
+    }*/
 
     /**
     * 姓名验证，长度在2~20之间即可
@@ -86,7 +87,7 @@ class Controller extends BaseController
     */
     protected function isValidName($name = '')
     {
-        if (preg_match('/^.{2,20}$/', $name) === 1) {
+        if (preg_match('/^.{2,20}$/', $name)) {
             return true;
         }
 
@@ -116,7 +117,7 @@ class Controller extends BaseController
     */
     protected function isValidPassword($str = '')
     {
-        if (preg_match('/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,10}$/', $str) === 1) {
+        if (preg_match('/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,10}$/', $str)) {
             return true;
         }
 

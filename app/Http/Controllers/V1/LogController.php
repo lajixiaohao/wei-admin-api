@@ -26,7 +26,7 @@ class LogController extends Controller
 
         //非超管只能看到自己的记录
         if ($this->request->roleId != 1) {
-            $where[] = ['a.admin_id', '=', $this->request->adminId];
+            $where[] = ['a.adminId', '=', $this->request->adminId];
         }
 
         //账号搜索
@@ -35,16 +35,16 @@ class LogController extends Controller
             $where[] = ['b.account', 'like', '%'.$account.'%'];
         }
 
-        $list = DB::table('admin_operation_logs as a')
-        	->join('admin_users as b','a.admin_id','=','b.id')
+        $list = DB::table('SYS_operation_logs as a')
+        	->join('sys_administrators as b','a.adminId','=','b.id')
             ->where($where)
-        	->select('a.id','a.api','a.describe','a.created_at','a.ip','a.device','b.account')
+        	->select('a.id','a.api','a.describe','a.createdAt','a.ip','a.device','b.account')
         	->offset($offset)
         	->limit($size)
         	->orderBy('a.id', 'desc')
             ->get();
-        $count = DB::table('admin_operation_logs as a')
-            ->join('admin_users as b','a.admin_id','=','b.id')
+        $count = DB::table('sys_operation_logs as a')
+            ->join('sys_administrators as b','a.adminId','=','b.id')
             ->where($where)
             ->count();
 
@@ -118,7 +118,7 @@ class LogController extends Controller
 
         //非超管只能看到自己的记录
         if ($this->request->roleId != 1) {
-            $where[] = ['a.admin_id', '=', $this->request->adminId];
+            $where[] = ['a.adminId', '=', $this->request->adminId];
         }
 
         //账号搜索
@@ -127,10 +127,10 @@ class LogController extends Controller
             $where[] = ['b.account', 'like', '%'.$account.'%'];
         }
 
-        $data = DB::table('admin_operation_logs as a')
-            ->join('admin_users as b','a.admin_id','=','b.id')
+        $data = DB::table('sys_operation_logs as a')
+            ->join('sys_administrators as b','a.adminId','=','b.id')
             ->where($where)
-            ->select('a.api','a.describe','a.created_at','a.ip','a.device','b.account')
+            ->select('a.api','a.describe','a.createdAt','a.ip','a.device','b.account')
             ->orderBy('a.id', 'desc')
             ->limit(10)
             ->get()
@@ -148,7 +148,7 @@ class LogController extends Controller
                 $tableHtml .= '<td>'.$v->ip.'</td>';
                 $tableHtml .= '<td>'.$v->describe.'</td>';
                 $tableHtml .= '<td>'.$v->device.'</td>';
-                $tableHtml .= '<td>'.$v->created_at.'</td>';
+                $tableHtml .= '<td>'.$v->createdAt.'</td>';
                 $tableHtml .= '</tr>';
             }
         } else {

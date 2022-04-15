@@ -1,7 +1,7 @@
 <?php
 /**
  * 个人资料
- * 2021.7.30
+ * 2022.4.15
  */
 namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;
@@ -18,25 +18,25 @@ class ProfileController extends Controller
     */
     public function get()
     {
-        $data = DB::table('admin_users as a')
-          ->leftJoin('admin_roles as b', 'b.id', '=', 'a.role_id')
+        $data = DB::table('sys_admins as a')
+          ->leftJoin('sys_roles as b', 'b.id', '=', 'a.roleId')
           ->where('a.id', $this->request->adminId)
-          ->select('a.parent_id','a.account','a.true_name','a.created_at','b.role_name')
+          ->select('a.parentId','a.account','a.trueName','a.createdAt','b.roleName AS role')
         ->first();
         if ($data) {
             //上级管理员
             $data->superior = '';
-            $superiorAdmin = DB::table('admin_users')->where('id', $data->parent_id)->select('account','true_name')->first();
-            unset($data->parent_id);
+            $superiorAdmin = DB::table('sys_admins')->where('id', $data->parentId)->select('account','trueName')->first();
+            unset($data->parentId);
             if ($superiorAdmin) {
-                $data->superior = $superiorAdmin->true_name ? $superiorAdmin->true_name : $superiorAdmin->account;
+                $data->superior = $superiorAdmin->trueName ? $superiorAdmin->trueName : $superiorAdmin->account;
             }
             //注册时间
-            $data->created_at = substr($data->created_at, 0, 10);
+            $data->createdAt = date('Y-m-d', $data->createdAt);
             //所属部门
-            $data->department = DB::table('admin_departments')->where('id', $this->request->departmentId)->value('name');
+            $data->dept = DB::table('sys_depts')->where('id', $this->request->deptId)->value('deptName');
             //所属职位
-            $data->post = DB::table('admin_posts')->where('id', $this->request->postId)->value('name');
+            $data->post = DB::table('sys_posts')->where('id', $this->request->postId)->value('postName');
         }
 
         return response()->json($this->success(['profile'=>$data]));
@@ -54,10 +54,10 @@ class ProfileController extends Controller
         }
 
         $field = [
-            'true_name'=>$name,
-            'updated_at'=>date('Y-m-d H:i:s')
+            'trueName'=>$name,
+            'updatedAt'=>time()
         ];
-        if (DB::table('admin_users')->where('id', $this->request->adminId)->update($field) === FALSE) {
+        if (DB::table('sys_admins')->where('id', $this->request->adminId)->update($field) === FALSE) {
             return response()->json($this->fail('修改失败'));
         }
 
@@ -81,14 +81,14 @@ class ProfileController extends Controller
 
             $field = [
                 'pwd'=>password_hash($pwd, PASSWORD_DEFAULT),
-                'updated_at'=>date('Y-m-d H:i:s')
+                'updatedAt'=>time()
             ];
-            DB::table('admin_users')->where('id', $this->request->adminId)->update($field);
+            DB::table('sys_admins')->where('id', $this->request->adminId)->update($field);
 
             //记录登出日志
-            $id = DB::table('admin_login_logs')->where('admin_id', $this->request->adminId)->orderBy('id', 'desc')->limit(1)->value('id');
+            $id = DB::table('sys_login_logs')->where('adminId', $this->request->adminId)->orderBy('id', 'desc')->limit(1)->value('id');
             if ($id) {
-                DB::table('admin_login_logs')->where('id', $id)->update(['remark'=>'成功修改登录密码，正常退出','logout_at'=>date('Y-m-d H:i:s')]);
+                DB::table('sys_login_logs')->where('id', $id)->update(['logoutAt'=>time()]);
             }
 
             $this->recordLog('修改自己的登录密码');

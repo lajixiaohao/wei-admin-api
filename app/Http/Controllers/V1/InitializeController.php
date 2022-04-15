@@ -22,10 +22,8 @@ class InitializeController extends Controller
     public function index()
     {
         // token验证通过，断定管理员存在
-        $data = DB::table('sys_administrators')->where('id', $this->request->adminId)->select('account', 'trueName')->first();
-        $account = $data->trueName ? $data->trueName : $data->account;
-
-        return response()->json($this->success(['menus'=>$this->_getRoleMenu(), 'account'=>$account]));
+        $data = DB::table('sys_admins')->where('id', $this->request->adminId)->select('account','trueName')->first();
+        return response()->json($this->success(['menus'=>$this->_getRoleMenu(), 'userInfo'=>$data]));
     }
 
     /**

@@ -58,7 +58,7 @@ class LoginController extends Controller
             ['isAble', '=', 1]
         ];
         // 管理员信息
-        $admin = DB::table('sys_administrators')->where($where)->first();
+        $admin = DB::table('sys_admins')->where($where)->first();
         if (! $admin) {
             return response()->json($this->fail('账号无效'));
         }
