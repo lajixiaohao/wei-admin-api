@@ -27,7 +27,7 @@ class Controller extends BaseController
                 'adminId'=>$this->request->adminId,
                 'api'=>str_replace('/', ':', $this->request->path()),
                 'describe'=>$describe,
-                'ip'=>$this->request->getClientIp(),
+                'ip'=>inet_pton($this->request->ip()),
                 'requestJson'=>json_encode($this->request->all()),
                 'device'=>$this->request->userAgent(),
                 'createdAt'=>time()

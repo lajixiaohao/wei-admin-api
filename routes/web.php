@@ -18,11 +18,13 @@ $router->get('/', function () use ($router) {
     return response()->json(['code'=>1, 'msg'=>'Bad Request'], 400);
 });
 
-$router->group(['namespace'=>'V1', 'prefix'=>'api'], function () use ($router) {
+$router->group(['namespace'=>'V1', 'prefix'=>env('ROUTE_PREFIX', '')], function () use ($router) {
 	// 登录
 	$router->post('login', 'LoginController@index');
 	// 获取验证码
 	$router->get('get-captcha', 'CaptchaController@get');
+	// 测试使用
+	$router->get('test', 'TestController@index');
 
 	//<^只需要验证token有效
 	$router->group(['middleware'=>'token'], function () use ($router) {
@@ -71,7 +73,10 @@ $router->group(['namespace'=>'V1', 'prefix'=>'api'], function () use ($router) {
 		$router->get('log/operation/export', 'LogController@exportOperationLog');
 		//^>
 		//<^部门管理
-		$router->get('dept/index', 'DeptController@index');
+		$router->get('dept/get', 'DeptController@get');
+		$router->post('dept/add', 'DeptController@add');
+		$router->post('dept/edit', 'DeptController@edit');
+		$router->post('dept/remove', 'DeptController@remove');
 		// $router->get('department/tree', 'DepartmentController@tree');
 		// $router->post('department/add', 'DepartmentController@add');
 		// $router->post('department/edit', 'DepartmentController@edit');

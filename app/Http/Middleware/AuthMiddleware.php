@@ -24,7 +24,6 @@ class AuthMiddleware
         try {
             if ($request->roleId !== 1) {
                 $path = str_replace('/', ':', $request->path());
-
                 $where = [
                     ['a.path', '=', $path],
                     ['b.roleId', '=', $request->roleId]
