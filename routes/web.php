@@ -18,7 +18,7 @@ $router->get('/', function () use ($router) {
     return response()->json(['code'=>1, 'msg'=>'Bad Request'], 400);
 });
 
-$router->group(['namespace'=>'V1', 'prefix'=>env('ROUTE_PREFIX', '')], function () use ($router) {
+$router->group(['namespace'=>'V1', 'prefix'=>'api'], function () use ($router) {
 	// 登录
 	$router->post('login', 'LoginController@index');
 	// 获取验证码
@@ -40,15 +40,15 @@ $router->group(['namespace'=>'V1', 'prefix'=>env('ROUTE_PREFIX', '')], function 
 	//<^需要验证token+权限
 	$router->group(['middleware'=>['token', 'auth']], function () use ($router) {
 		//<^菜单管理
-		$router->get('menu/list', 'MenuController@list');
-		$router->post('menu/add', 'MenuController@add');
-		$router->post('menu/edit', 'MenuController@edit');
-		$router->post('menu/remove', 'MenuController@remove');
-		$router->post('menu/add-register-route', 'MenuController@addRegisterRoute');
-		$router->post('menu/edit-register-route', 'MenuController@editRegisterRoute');
-		$router->post('menu/add-permission', 'MenuController@addPermission');
-		$router->post('menu/edit-permission', 'MenuController@editPermission');
-		$router->get('menu/get-two-level-menu', 'MenuController@getTwoLevelMenu');
+		$router->get('menu/tree', 'MenuController@tree');
+		// $router->post('menu/add', 'MenuController@add');
+		// $router->post('menu/edit', 'MenuController@edit');
+		// $router->post('menu/remove', 'MenuController@remove');
+		// $router->post('menu/add-register-route', 'MenuController@addRegisterRoute');
+		// $router->post('menu/edit-register-route', 'MenuController@editRegisterRoute');
+		// $router->post('menu/add-permission', 'MenuController@addPermission');
+		// $router->post('menu/edit-permission', 'MenuController@editPermission');
+		// $router->get('menu/get-two-level-menu', 'MenuController@getTwoLevelMenu');
 		//^>
 		//<^角色管理
 		$router->get('role/list', 'RoleController@list');
@@ -67,26 +67,22 @@ $router->group(['namespace'=>'V1', 'prefix'=>env('ROUTE_PREFIX', '')], function 
 		$router->post('admin/modify-password', 'AdminController@modifyPassword');
 		$router->post('admin/change-takeover', 'AdminController@changeTakeover');
 		//^>
-		//<^日志管理
-		$router->get('log/operation', 'LogController@operation');
-		$router->get('log/login', 'LogController@login');
-		$router->get('log/operation/export', 'LogController@exportOperationLog');
-		//^>
 		//<^部门管理
-		$router->get('dept/get', 'DeptController@get');
+		$router->get('dept/tree', 'DeptController@tree');
 		$router->post('dept/add', 'DeptController@add');
 		$router->post('dept/edit', 'DeptController@edit');
 		$router->post('dept/remove', 'DeptController@remove');
-		// $router->get('department/tree', 'DepartmentController@tree');
-		// $router->post('department/add', 'DepartmentController@add');
-		// $router->post('department/edit', 'DepartmentController@edit');
-		// $router->post('department/remove', 'DepartmentController@remove');
 		//^>
 		//<^岗位管理
 		$router->get('post/list', 'PostController@list');
 		$router->post('post/add', 'PostController@add');
 		$router->post('post/edit', 'PostController@edit');
 		$router->post('post/remove', 'PostController@remove');
+		//^>
+		//<^日志管理
+		$router->get('log/operation', 'LogController@operation');
+		$router->get('log/login', 'LogController@login');
+		$router->get('log/operation/export', 'LogController@exportOperationLog');
 		//^>
 		//<加密应用
 		$router->get('encryption/rsa', 'EncryptionController@rsa');

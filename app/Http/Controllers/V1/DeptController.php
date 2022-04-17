@@ -14,10 +14,9 @@ class DeptController extends Controller
     }
 
     /**
-    * 获取部门数据
-    * 主要以树形展开
+    * 部门树
     */
-    public function get()
+    public function tree()
     {
         $parentId = intval($this->request->input('parentId', 0));
 
@@ -34,7 +33,7 @@ class DeptController extends Controller
         // 对下一级判断
         if ($depts) {
             foreach ($depts as $k => $v) {
-                //默认为叶子节点
+                //默认为叶子节点，即没有下一级
                 $depts[$k]->leaf = true;
                 //直属部门数
                 $depts[$k]->cnum = 0;
