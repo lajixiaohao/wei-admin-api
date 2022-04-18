@@ -11,7 +11,7 @@
  Target Server Version : 80028
  File Encoding         : 65001
 
- Date: 16/04/2022 22:04:34
+ Date: 18/04/2022 19:46:40
 */
 
 SET NAMES utf8mb4;
@@ -43,22 +43,20 @@ CREATE TABLE `sys_menus`  (
 INSERT INTO `sys_menus` VALUES (1, 0, '系统管理', NULL, NULL, NULL, 0, 'system', 1, 1, 1);
 INSERT INTO `sys_menus` VALUES (2, 0, '运维管理', NULL, NULL, NULL, 0, 'maintenance', 2, 1, 1);
 INSERT INTO `sys_menus` VALUES (3, 0, '日志管理', NULL, NULL, NULL, 0, 'log', 3, 1, 1);
-INSERT INTO `sys_menus` VALUES (4, 0, '意见反馈', '/feedback', 'Feedback', 'feedback/index', 0, 'feedback', 3, 1, 1);
-INSERT INTO `sys_menus` VALUES (5, 1, '基本设置', '/sys/base-setting', 'BaseSetting', 'sys/base_setting/index', 1, 'base_setting', 1, 0, 1);
-INSERT INTO `sys_menus` VALUES (6, 1, '权限管理', NULL, NULL, NULL, 0, 'auth', 2, 1, 1);
-INSERT INTO `sys_menus` VALUES (7, 1, '部门管理', '/sys/dept', 'Dept', 'sys/dept/index', 1, 'dept', 3, 1, 1);
-INSERT INTO `sys_menus` VALUES (8, 1, '岗位管理', '/sys/post', 'Post', 'sys/post/index', 1, 'post', 4, 1, 1);
-INSERT INTO `sys_menus` VALUES (9, 6, '管理员管理', '/sys/auth/admin', 'Admin', 'sys/auth/admin/index', 1, 'admin', 3, 1, 1);
-INSERT INTO `sys_menus` VALUES (10, 6, '角色管理', '/sys/auth/role', 'Role', 'sys/auth/role/index', 1, 'role', 2, 1, 1);
-INSERT INTO `sys_menus` VALUES (11, 1, '菜单管理', '/sys/auth/menu', 'Menu', 'sys/auth/menu/index', 1, 'menu', 1, 1, 1);
-INSERT INTO `sys_menus` VALUES (12, 9, '添加或编辑管理员', '/sys/auth/admin/add-edit', 'AddEditAdmin', 'sys/auth/admin/add_edit', 0, NULL, 1, 1, 2);
-INSERT INTO `sys_menus` VALUES (13, 2, '安全设置', '/maintenance/safe-setting', 'SafeSetting', 'maintenance/safe_setting', 1, 'safe_setting', 1, 1, 1);
-INSERT INTO `sys_menus` VALUES (14, 3, '登录日志', '/log/login', 'LoginLog', 'log/login', 1, 'login_log', 1, 1, 1);
-INSERT INTO `sys_menus` VALUES (15, 3, '操作日志', '/log/operation', 'OperationLog', 'log/operation', 1, 'operation_log', 2, 1, 1);
-INSERT INTO `sys_menus` VALUES (16, 2, '异常用户', '/maintenance/abnormal', 'Abnormal', 'maintenance/abnormal', 1, 'abnormal', 2, 1, 1);
-INSERT INTO `sys_menus` VALUES (17, 2, 'IP黑名单', '/maintenance/blacklist', 'Blacklist', 'maintenance/blacklist', 1, 'blacklist', 3, 1, 1);
-INSERT INTO `sys_menus` VALUES (18, 4, '意见反馈动态测试', '/feedback/test', 'FeedbackTest', 'feedback/test', 0, NULL, 1, 1, 2);
-INSERT INTO `sys_menus` VALUES (19, 5, '基本设置动态测试', '/sys/base-setting/test', 'BaseSettingTest', 'sys/base_setting/test', 0, NULL, 1, 1, 2);
-INSERT INTO `sys_menus` VALUES (20, 7, '获取部门数据', 'api:dept:get', NULL, NULL, 0, NULL, 1, 0, 3);
+INSERT INTO `sys_menus` VALUES (4, 0, '应用示例', NULL, NULL, NULL, 0, 'app', 4, 1, 1);
+INSERT INTO `sys_menus` VALUES (5, 1, '菜单管理', '/sys/menu', 'Menu', 'sys/menu/index', 1, 'menu', 1, 1, 1);
+INSERT INTO `sys_menus` VALUES (6, 1, '角色管理', '/sys/role', 'Role', 'sys/role/index', 1, 'role', 2, 1, 1);
+INSERT INTO `sys_menus` VALUES (7, 1, '管理员管理', '/sys/admin', 'Admin', 'sys/admin/index', 1, 'admin', 3, 1, 1);
+INSERT INTO `sys_menus` VALUES (8, 1, '部门管理', '/sys/dept', 'Dept', 'sys/dept/index', 1, 'dept', 4, 1, 1);
+INSERT INTO `sys_menus` VALUES (9, 1, '岗位管理', '/sys/post', 'Post', 'sys/post/index', 1, 'post', 5, 1, 1);
+INSERT INTO `sys_menus` VALUES (10, 2, '安全设置', '/maintenance/safe-setting', 'SafeSetting', 'maintenance/safe_setting/index', 1, 'safe_setting', 1, 1, 1);
+INSERT INTO `sys_menus` VALUES (11, 2, '异常用户', '/maintenance/abnormal-admin', 'AbnormalAdmin', 'maintenance/abnormal_admin/index', 1, 'abnormal', 2, 1, 1);
+INSERT INTO `sys_menus` VALUES (12, 2, 'IP黑名单', '/maintenance/blacklist', 'Blacklist', 'maintenance/blacklist/index', 1, 'blacklist', 3, 1, 1);
+INSERT INTO `sys_menus` VALUES (13, 3, '登录日志', '/log/login', 'LoginLog', 'log/login/index', 1, 'login_log', 1, 1, 1);
+INSERT INTO `sys_menus` VALUES (14, 3, '操作日志', '/log/operation', 'OperationLog', 'log/operation/index', 1, 'operation_log', 2, 1, 1);
+INSERT INTO `sys_menus` VALUES (15, 4, 'wangEditor', '/demo/wangeditor', 'WangEditorDemo', 'demo/wangeditor', 1, 'fulltext', 1, 1, 1);
+INSERT INTO `sys_menus` VALUES (16, 4, '密钥对工具', '/demo/rsa', 'RsaDemo', 'demo/rsa', 1, 'rsa', 2, 1, 1);
+INSERT INTO `sys_menus` VALUES (17, 4, '二级菜单', NULL, NULL, NULL, 0, 'menu_1', 3, 1, 1);
+INSERT INTO `sys_menus` VALUES (18, 17, '三级菜单', '/demo/thrid-menu', 'ThirdMenu', 'demo/third_menu', 1, 'menu_2', 1, 1, 1);
 
 SET FOREIGN_KEY_CHECKS = 1;
