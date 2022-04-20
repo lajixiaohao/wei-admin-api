@@ -60,6 +60,9 @@ class MenuController extends Controller
 
         // 上级菜单
         $parentIds = $this->request->input('parentId', []);
+        if (! is_array($parentIds)) {
+            return response()->json($this->fail('非法的上级菜单'));
+        }
         $parentIdsCount = count($parentIds);
         if ($parentIdsCount > 3) {
             return response()->json($this->fail('未知的上级菜单'));
@@ -189,6 +192,66 @@ class MenuController extends Controller
             $data = $this->_getMenus();
             return response()->json($this->success($data));
         }
+
+        // 上级菜单
+        $parentIds = $this->request->input('parentId', []);
+        if (! is_array($parentIds) || ! $parentIds) {
+            return response()->json($this->fail('非法的上级菜单'));
+        }
+        $count = count($parentIds);
+        if ($count > 3) {
+            return response()->json($this->fail('非法操作'));
+        }
+        // 上级菜单ID
+        $parentId = $parentIds[$count - 1];
+
+        // 权限名称
+        $title = trim($this->request->input('title', ''));
+        if (! $title) {
+            return response()->json($this->fail('请输入权限名称'));
+        }
+
+        // 权限标识
+        $path = trim($this->request->input('path', ''));
+        if (! $path) {
+            return response()->json($this->fail('请输入权限标识'));
+        }
+
+        // 上级菜单有效性判断
+        if (! DB::table('sys_menus')->where('id', $parentId)->exists()) {
+            return response()->json($this->fail('无效的上级菜单'));
+        }
+
+        // 同级下权限名称不能重复
+        $where = [
+            ['parentId', '=', $parentId],
+            ['title', '=', $title]
+        ];
+        if (DB::table('sys_menus')->where($where)->exists()) {
+            return response()->json($this->fail('同级下该权限名称已存在'));
+        }
+
+        // 权限标识唯一性校验
+        if (DB::table('sys_menus')->where('path', $path)->exists()) {
+            return response()->json($this->fail('该权限标识已存在'));
+        }
+
+        $field = [
+            'parentId'=>$parentId,
+            'title'=>$title,
+            'path'=>$path,
+            'type'=>3,
+            'isShow'=>0,
+            'sort'=>intval($this->request->input('sort', 1))
+        ];
+        $insertId = DB::table('sys_menus')->insertGetId($field);
+        if ($insertId <= 0) {
+            return response()->json($this->fail('添加失败'));
+        }
+
+        $this->recordLog('添加权限：'.$title);
+
+        return response()->json($this->success([], '添加成功'));
     }
 
     /**
