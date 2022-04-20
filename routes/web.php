@@ -42,7 +42,10 @@ $router->group(['namespace'=>'V1', 'prefix'=>'api'], function () use ($router) {
 		//<^菜单管理
 		$router->get('menu/tree', 'MenuController@tree');
 		$router->post('menu/add', 'MenuController@add');
+		$router->post('menu/edit', 'MenuController@edit');
 		$router->post('menu/remove', 'MenuController@remove');
+		$router->post('menu/permission/add', 'MenuController@addPermission');
+		$router->post('menu/permission/edit', 'MenuController@editPermission');
 		// $router->post('menu/add', 'MenuController@add');
 		// $router->post('menu/edit', 'MenuController@edit');
 		// $router->post('menu/remove', 'MenuController@remove');
