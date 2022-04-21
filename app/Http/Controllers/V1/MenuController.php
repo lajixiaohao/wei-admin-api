@@ -101,10 +101,16 @@ class MenuController extends Controller
             return response()->json($this->fail('上级菜单无效'));
         }
 
+        // 路由地址不能重复
+        $path = trim($this->request->input('path', ''));
+        if ($path && DB::table('sys_menus')->where('path', $path)->exists()) {
+            return response()->json($this->fail('该路由地址已存在'));
+        }
+
         $field = [
             'parentId'=>$parentId,
             'title'=>$title,
-            'path'=>trim($this->request->input('path', '')),
+            'path'=>$path,
             'componentName'=>trim($this->request->input('componentName', '')),
             'componentPath'=>trim($this->request->input('componentPath', '')),
             'isCache'=>intval($this->request->input('isCache', 0)),
@@ -162,6 +168,16 @@ class MenuController extends Controller
             return response()->json($this->fail('同级下该菜单已存在'));
         }
 
+        // 路由地址不能重复
+        $path = trim($this->request->input('path', ''));
+        $where = [
+            ['id', '<>', $id],
+            ['path', '=', $path]
+        ];
+        if ($path && DB::table('sys_menus')->where($where)->exists()) {
+            return response()->json($this->fail('该路由地址已存在'));
+        }
+
         $field = [
             'title'=>$title,
             'path'=>trim($this->request->input('path', '')),
@@ -187,71 +203,176 @@ class MenuController extends Controller
     public function addPermission()
     {
         // 初始化，获取所有显示菜单
-        $init = intval($this->request->input('init', 0));
-        if ($init === 1) {
-            $data = $this->_getMenus();
+        $init = $this->request->input('init', false);
+        if ($init === true) {
+            $data['menu'] = $this->_getMenus();
             return response()->json($this->success($data));
         }
 
-        // 上级菜单
-        $parentIds = $this->request->input('parentId', []);
-        if (! is_array($parentIds) || ! $parentIds) {
-            return response()->json($this->fail('非法的上级菜单'));
+        // 基础验证
+        $check = $this->_permissionCheck();
+        if ($check['code'] === 1) {
+            return response()->json($this->fail($check['msg']));
         }
-        $count = count($parentIds);
-        if ($count > 3) {
-            return response()->json($this->fail('非法操作'));
+
+        if (DB::table('sys_menus')->insertGetId($check['field']) <= 0) {
+            return response()->json($this->fail('添加失败'));
         }
-        // 上级菜单ID
-        $parentId = $parentIds[$count - 1];
+
+        $this->recordLog('添加权限：'.json_encode($check['field']));
+
+        return response()->json($this->success([], '添加成功'));
+    }
+
+    /**
+    * 编辑权限
+    */
+    public function editPermission()
+    {
+        // 权限ID
+        $id = intval($this->request->input('id', 0));
+        if ($id <= 0) {
+            return response()->json($this->fail('无效参数'));
+        }
+
+        // 初始化，获取基本数据
+        $init = $this->request->input('init', false);
+        if ($init === true) {
+            $info = DB::table('sys_menus')->where('id', $id)->select('id','parentId','title','path','sort')->first();
+            if (! $info) {
+                return response()->json($this->fail('权限不存在'));
+            }
+
+            $parentIds = $this->_getParentIds($info->parentId);
+            sort($parentIds);
+
+            $data = [
+                'menu'=>$this->_getMenus(),
+                'parentIds'=>$parentIds,
+                'info'=>$info
+            ];
+            return response()->json($this->success($data));
+        }
+
+        // 基础验证
+        $check = $this->_permissionCheck($id);
+        if ($check['code'] === 1) {
+            return response()->json($this->fail($check['msg']));
+        }
+
+        if (DB::table('sys_menus')->where('id', $id)->update($check['field']) === false) {
+            return response()->json($this->fail('编辑失败'));
+        }
+
+        $this->recordLog('编辑权限，id='.$id);
+
+        return response()->json($this->success([], '编辑成功'));
+    }
+
+    /**
+    * 获取所有父级ID
+    * @param int $parentI
+    * @param array $ids
+    * @return array
+    */
+    private function _getParentIds($parentId = 0, &$ids = [])
+    {
+        if ($parentId <= 0) {
+            return $ids;
+        }
+
+        $ids[] = $parentId;
+
+        $data = DB::table('sys_menus')->where('id', $parentId)->select('parentId')->get()->toArray();
+        if ($data) {
+            foreach ($data as $v) {
+                $this->_getParentIds($v->parentId, $ids);
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+    * 添加、编辑权限公共验证
+    * @param int $id
+    * @return array
+    */
+    private function _permissionCheck($id = 0)
+    {
+        $ret = ['code'=>1, 'msg'=>'未知错误'];
+
+        // 公用的条件判断
+        $idWhere = [];
+        // 编辑
+        if ($id > 0) {
+            // 权限是否存在
+            if (! DB::table('sys_menus')->where('id', $id)->exists()) {
+                $ret['msg'] = '该权限不存在';
+                return $ret;
+            }
+
+            $idWhere = ['id', '<>', $id];
+        }
+
+        // 上级ID
+        $parentId = intval($this->request->input('parentId', 0));
+        if (! DB::table('sys_menus')->where('id', $parentId)->exists()) {
+            $ret['msg'] = '上级ID不存在';
+            return $ret;
+        }
 
         // 权限名称
         $title = trim($this->request->input('title', ''));
         if (! $title) {
-            return response()->json($this->fail('请输入权限名称'));
+            $ret['msg'] = '请输入权限名称';
+            return $ret;
         }
 
         // 权限标识
         $path = trim($this->request->input('path', ''));
         if (! $path) {
-            return response()->json($this->fail('请输入权限标识'));
+            $ret['msg'] = '请输入权限标识';
+            return $ret;
         }
 
-        // 上级菜单有效性判断
-        if (! DB::table('sys_menus')->where('id', $parentId)->exists()) {
-            return response()->json($this->fail('无效的上级菜单'));
-        }
-
-        // 同级下权限名称不能重复
+        // 1、同级下权限名称不能重复
         $where = [
             ['parentId', '=', $parentId],
             ['title', '=', $title]
         ];
+        if ($id > 0) {
+            $where[] = $idWhere;
+        }
         if (DB::table('sys_menus')->where($where)->exists()) {
-            return response()->json($this->fail('同级下该权限名称已存在'));
+            $ret['msg'] = '同级下该权限名称已存在';
+            return $ret;
         }
 
-        // 权限标识唯一性校验
-        if (DB::table('sys_menus')->where('path', $path)->exists()) {
-            return response()->json($this->fail('该权限标识已存在'));
+        // 2、权限标识唯一性校验
+        $where = [
+            ['path', '=', $path]
+        ];
+        if ($id > 0) {
+            $where[] = $idWhere;
+        }
+        if (DB::table('sys_menus')->where($where)->exists()) {
+            $ret['msg'] = '该权限标识已存在';
+            return $ret;
         }
 
+        // 编辑时入库字段
         $field = [
-            'parentId'=>$parentId,
             'title'=>$title,
             'path'=>$path,
             'type'=>3,
-            'isShow'=>0,
             'sort'=>intval($this->request->input('sort', 1))
         ];
-        $insertId = DB::table('sys_menus')->insertGetId($field);
-        if ($insertId <= 0) {
-            return response()->json($this->fail('添加失败'));
+        if ($id <= 0) {
+            $field['parentId'] = $parentId;
         }
 
-        $this->recordLog('添加权限：'.$title);
-
-        return response()->json($this->success([], '添加成功'));
+        return ['code'=>0, 'field'=>$field];
     }
 
     /**
