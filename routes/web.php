@@ -46,14 +46,6 @@ $router->group(['namespace'=>'V1', 'prefix'=>'api'], function () use ($router) {
 		$router->post('menu/remove', 'MenuController@remove');
 		$router->post('menu/permission/add', 'MenuController@addPermission');
 		$router->post('menu/permission/edit', 'MenuController@editPermission');
-		// $router->post('menu/add', 'MenuController@add');
-		// $router->post('menu/edit', 'MenuController@edit');
-		// $router->post('menu/remove', 'MenuController@remove');
-		// $router->post('menu/add-register-route', 'MenuController@addRegisterRoute');
-		// $router->post('menu/edit-register-route', 'MenuController@editRegisterRoute');
-		// $router->post('menu/add-permission', 'MenuController@addPermission');
-		// $router->post('menu/edit-permission', 'MenuController@editPermission');
-		// $router->get('menu/get-two-level-menu', 'MenuController@getTwoLevelMenu');
 		//^>
 		//<^角色管理
 		$router->get('role/list', 'RoleController@list');

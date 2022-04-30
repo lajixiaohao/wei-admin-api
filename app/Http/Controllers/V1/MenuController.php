@@ -18,7 +18,7 @@ class MenuController extends Controller
     */
     public function tree()
     {
-        // 父级菜单ID
+        // 父级ID
     	$parentId = intval($this->request->input('parentId', 0));
 
         $data = DB::table('sys_menus')
@@ -26,7 +26,6 @@ class MenuController extends Controller
             ->orderBy('sort')
             ->get()
             ->toArray();
-        // 对下一级判断
         if ($data) {
             foreach ($data as $k => $v) {
                 // 默认为叶子节点，即没有下一级
@@ -41,74 +40,113 @@ class MenuController extends Controller
     }
 
     /**
-    * 添加
+    * 添加菜单
     */
     public function add()
     {
         // 初始化，获取所有显示菜单
-        $init = intval($this->request->input('init', 0));
-        if ($init === 1) {
-            $data = $this->_getMenus();
+        $init = $this->request->input('init', false);
+        if ($init === true) {
+            $data['menu'] = $this->_getMenus();
             return response()->json($this->success($data));
+        }
+
+        $check = $this->_menuCheck();
+        if ($check['code'] === 1) {
+            return response()->json($this->fail($check['msg']));
+        }
+
+        if (DB::table('sys_menus')->insertGetId($check['field']) <= 0) {
+            return response()->json($this->fail('添加失败'));
+        }
+
+        $this->recordLog('添加菜单：'.json_encode($check['field']));
+
+        return response()->json($this->success([], '添加成功'));
+    }
+
+    /**
+    * 添加、编辑菜单基础验证
+    */
+    private function _menuCheck($id = 0)
+    {
+        $ret = ['code'=>1, 'msg'=>'未知错误'];
+
+        // 公用的条件判断
+        $idWhere = [];
+        // 编辑
+        if ($id > 0) {
+            // 菜单是否存在
+            if (! DB::table('sys_menus')->where('id', $id)->exists()) {
+                $ret['msg'] = '该菜单不存在';
+                return $ret;
+            }
+
+            $idWhere = ['id', '<>', $id];
         }
 
         // 菜单类型
         $type = intval($this->request->input('type', 0));
         if (! in_array($type, [1, 2])) {
-            return response()->json($this->fail('未知菜单类型'));
-        }
-
-        // 上级菜单
-        $parentIds = $this->request->input('parentId', []);
-        if (! is_array($parentIds)) {
-            return response()->json($this->fail('非法的上级菜单'));
-        }
-        $parentIdsCount = count($parentIds);
-        if ($parentIdsCount > 3) {
-            return response()->json($this->fail('未知的上级菜单'));
+            $ret['msg'] = '非法菜单类型';
+            return $ret;
         }
 
         // 上级菜单ID
-        $parentId = $parentIdsCount > 0 ? $parentIds[$parentIdsCount - 1] : 0;
-
-        // 顶级菜单不能为隐式菜单
-        if ($parentIdsCount === 0 && $type === 2) {
-            return response()->json($this->fail('顶级菜单不能为隐式菜单'));
+        $parentId = intval($this->request->input('parentId', 0));
+        // 1、上级菜单有效性验证
+        if ($parentId > 0 && ! DB::table('sys_menus')->where('id', $parentId)->exists()) {
+            $ret['msg'] = '上级菜单不存在';
+            return $ret;
+        }
+        // 左侧菜单层级不能超过3个
+        $parentIds = $this->_getParentIds($parentId);
+        if (count($parentIds) > 2) {
+            $ret['msg'] = '左侧菜单层级不能超过3个';
+            return $ret;
         }
 
-        // 显示菜单最多只支持到3级
-        if ($parentIdsCount === 3 && $type === 1) {
-            return response()->json($this->fail('显示菜单最多只支持到三级'));
+        // 2、顶级菜单不能为隐式菜单
+        if ($parentId === 0 && $type === 2) {
+            $ret['msg'] = '顶级菜单类型不能为隐式菜单';
+            return $ret;
         }
 
         // 菜单名称
         $title = trim($this->request->input('title', ''));
         if (! $title) {
-            return response()->json($this->fail('请输入菜单名称'));
+            $ret['msg'] = '请输入菜单名称';
+            return $ret;
         }
 
-        // 同级下菜单名称不能重复
+        // 3、同级下菜单名称不能重复
         $where = [
             ['parentId', '=', $parentId],
             ['title', '=', $title]
         ];
+        if ($id > 0) {
+            $where[] = $idWhere;
+        }
         if (DB::table('sys_menus')->where($where)->exists()) {
-            return response()->json($this->fail('同级下该菜单已存在'));
+            $ret['msg'] = '同级下该菜单已存在';
+            return $ret;
         }
 
-        // 上级菜单有效性验证
-        if ($parentId > 0 && ! DB::table('sys_menus')->where('id', $parentId)->exists()) {
-            return response()->json($this->fail('上级菜单无效'));
-        }
-
-        // 路由地址不能重复
+        // 4、路由地址不能重复
         $path = trim($this->request->input('path', ''));
-        if ($path && DB::table('sys_menus')->where('path', $path)->exists()) {
-            return response()->json($this->fail('该路由地址已存在'));
+        $where = [
+            ['path', '=', $path]
+        ];
+        if ($id > 0) {
+            $where[] = $idWhere;
+        }
+        if ($path && DB::table('sys_menus')->where($where)->exists()) {
+            $ret['msg'] = '该路由地址已存在';
+            return $ret;
         }
 
+        // 编辑时入库字段
         $field = [
-            'parentId'=>$parentId,
             'title'=>$title,
             'path'=>$path,
             'componentName'=>trim($this->request->input('componentName', '')),
@@ -116,83 +154,57 @@ class MenuController extends Controller
             'isCache'=>intval($this->request->input('isCache', 0)),
             'icon'=>trim($this->request->input('icon', '')),
             'sort'=>intval($this->request->input('sort', 1)),
-            'isShow'=>intval($this->request->input('isShow', 0)),
-            'type'=>$type
+            'isShow'=>intval($this->request->input('isShow', 0))
         ];
-
-        $insertId = DB::table('sys_menus')->insertGetId($field);
-        if ($insertId <= 0) {
-            return response()->json($this->fail('添加失败'));
+        if ($id <= 0) {
+            $field['parentId'] = $parentId;
+            $field['type'] = $type;
         }
 
-        $this->recordLog('添加菜单：'.$title);
-
-        return response()->json($this->success([], '添加成功'));
+        return ['code'=>0, 'field'=>$field];
     }
 
     /**
-    * 编辑
-    * 编辑除父级ID、菜单类型以外的数据
+    * 编辑菜单
     */
     public function edit()
     {
         // 菜单ID
         $id = intval($this->request->input('id', 0));
         if ($id <= 0) {
-            return response()->json($this->fail('无效菜单'));
+            return response()->json($this->fail('无效参数'));
         }
 
-        // 初始化，获取菜单基本数据
-        $init = intval($this->request->input('init', 0));
-        if ($init === 1) {
-            $data = DB::table('sys_menus')->where('id', $id)->first();
+        // 初始化，获取基本数据
+        $init = $this->request->input('init', false);
+        if ($init === true) {
+            $info = DB::table('sys_menus')->where('id', $id)->first();
+            if (! $info) {
+                return response()->json($this->fail('菜单不存在'));
+            }
+
+            $parentIds = $this->_getParentIds($info->parentId);
+            sort($parentIds);
+
+            $data = [
+                'menu'=>$this->_getMenus(),
+                'parentIds'=>$parentIds,
+                'info'=>$info
+            ];
             return response()->json($this->success($data));
         }
 
-        // 父级ID
-        $parentId = intval($this->request->input('parentId', 0));
-
-        // 菜单名称
-        $title = trim($this->request->input('title', ''));
-        if (! $title) {
-            return response()->json($this->fail('请输入菜单名称'));
+        // 基础验证
+        $check = $this->_menuCheck($id);
+        if ($check['code'] === 1) {
+            return response()->json($this->fail($check['msg']));
         }
 
-        // 同级下菜单名称不能重复
-        $where = [
-            ['id', '<>', $id],
-            ['parentId', '=', $parentId],
-            ['title', '=', $title]
-        ];
-        if (DB::table('sys_menus')->where($where)->exists()) {
-            return response()->json($this->fail('同级下该菜单已存在'));
-        }
-
-        // 路由地址不能重复
-        $path = trim($this->request->input('path', ''));
-        $where = [
-            ['id', '<>', $id],
-            ['path', '=', $path]
-        ];
-        if ($path && DB::table('sys_menus')->where($where)->exists()) {
-            return response()->json($this->fail('该路由地址已存在'));
-        }
-
-        $field = [
-            'title'=>$title,
-            'path'=>trim($this->request->input('path', '')),
-            'componentName'=>trim($this->request->input('componentName', '')),
-            'componentPath'=>trim($this->request->input('componentPath', '')),
-            'isCache'=>intval($this->request->input('isCache', 0)),
-            'icon'=>trim($this->request->input('icon', '')),
-            'sort'=>intval($this->request->input('sort', 1)),
-            'isShow'=>intval($this->request->input('isShow', 0))
-        ];
-        if (DB::table('sys_menus')->where('id', $id)->update($field) === false) {
+        if (DB::table('sys_menus')->where('id', $id)->update($check['field']) === false) {
             return response()->json($this->fail('编辑失败'));
         }
 
-        $this->recordLog('编辑菜单，ID='.$id);
+        $this->recordLog('编辑菜单，id='.$id);
 
         return response()->json($this->success([], '编辑成功'));
     }
