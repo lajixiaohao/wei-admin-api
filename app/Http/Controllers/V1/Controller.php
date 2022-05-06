@@ -28,11 +28,10 @@ class Controller extends BaseController
                 'api'=>str_replace('/', ':', $this->request->path()),
                 'describe'=>$describe,
                 'ip'=>inet_pton($this->request->ip()),
-                'requestJson'=>json_encode($this->request->all()),
                 'device'=>$this->request->userAgent(),
-                'createdAt'=>time()
+                'createdAt'=>date('Y-m-d H:i:s')
             ];
-            DB::table('sys_operation_logs')->insert($field);
+            DB::table('admin_operation_logs')->insert($field);
         } catch (\Exception $e) {}
     }
 
@@ -82,13 +81,14 @@ class Controller extends BaseController
 
     /**
     * 密码验证
-    * 长度6~10
+    * https://c.runoob.com/front-end/854/
+    * 长度6~15
     * @param string $str
     * @return bool
     */
     protected function isValidPassword($str = '')
     {
-        if (preg_match('/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,10}$/', $str)) {
+        if (preg_match('/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,15}$/', $str)) {
             return true;
         }
 

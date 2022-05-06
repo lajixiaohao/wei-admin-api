@@ -1,7 +1,7 @@
 <?php
 /**
  * 角色管理
- * 2021.7.26
+ * 2022.5.6
  */
 namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;
@@ -20,27 +20,26 @@ class RoleController extends Controller
     {
         $page = $this->request->input('page', 1);
         $size = $this->request->input('size', 10);
-        $offset = (($page * $size) - $size);
+        $offset = ($page * $size) - $size;
 
         $where = [
-            ['parent_id','=',$this->request->roleId]
+            ['parentId','=',$this->request->roleId]
         ];
 
-        $role_name = trim($this->request->input('role_name', ''));
-        if ($role_name) {
-            $where[] = ['role_name', 'like', '%'.$role_name.'%'];
+        $roleName = trim($this->request->input('roleName', ''));
+        if ($roleName) {
+            $where[] = ['roleName', 'like', '%'.$roleName.'%'];
         }
         
-        $list = DB::table('admin_roles')
-          ->where($where)
-          ->select('id','role_name','role_describe','is_able','created_at')
-          ->offset($offset)
-          ->limit($size)
-          ->orderBy('id', 'desc')
-        ->get();
-        $count = DB::table('admin_roles')->where($where)->count();
+        $data['list'] = DB::table('admin_roles')
+            ->where($where)
+            ->offset($offset)
+            ->limit($size)
+            ->orderBy('id', 'desc')
+            ->get();
+        $data['count'] = DB::table('admin_roles')->where($where)->count();
         
-        return response()->json($this->success(['list'=>$list, 'count'=>$count]));
+        return response()->json($this->success($data));
     }
 
     /**
@@ -48,33 +47,34 @@ class RoleController extends Controller
     */
     public function add()
     {
-        $role_name = $this->request->input('role_name', '');
-        if (mb_strlen($role_name) < 2 || mb_strlen($role_name) > 20) {
-            return response()->json($this->fail('角色名长度在 2~20 个字符'));
+        $roleName = $this->request->input('roleName', '');
+        if (! $roleName) {
+            return response()->json($this->fail('请输入角色名称'));
         }
 
-        //同一角色下，不能有相同的角色
+        // 同一角色下，不能有相同的角色
         $where = [
-            ['parent_id', '=', $this->request->roleId],
-            ['role_name', '=', $role_name]
+            ['parentId', '=', $this->request->roleId],
+            ['roleName', '=', $roleName]
         ];
         if (DB::table('admin_roles')->where($where)->exists()) {
             return response()->json($this->fail('该角色已存在'));
         }
 
-        $field['parent_id'] = $this->request->roleId;
-        $field['role_name'] = $role_name;
-        $field['role_describe'] = trim($this->request->input('role_describe', ''));
-        $field['is_able'] = intval($this->request->input('is_able', 1));
-        $field['created_at'] = $field['updated_at'] = date('Y-m-d H:i:s');
+        $field = [
+            'parentId'=>$this->request->roleId,
+            'roleName'=>$roleName,
+            'roleIntroduce'=>trim($this->request->input('roleIntroduce', '')),
+            'isAble'=>intval($this->request->input('isAble', 1))
+        ];
+        $field['createdAt'] = $field['updatedAt'] = date('Y-m-d H:i:s');
 
         $insertId = DB::table('admin_roles')->insertGetId($field);
         if ($insertId <= 0) {
             return response()->json($this->fail('添加失败'));
         }
 
-        //写入日志
-        $this->recordLog('添加角色:'.$role_name);
+        $this->recordLog('添加角色:'.$roleName);
 
         return response()->json($this->success([], '添加成功'));
     }
@@ -85,37 +85,40 @@ class RoleController extends Controller
     public function edit()
     {
         $id = intval($this->request->input('id', 0));
-        $param['role_name'] = trim($this->request->input('role_name', ''));
-        $param['role_describe'] = trim($this->request->input('role_describe', ''));
-        $param['updated_at'] = date('Y-m-d H:i:s');
-        $param['is_able'] = intval($this->request->input('is_able', 1));
-
-        if (mb_strlen($param['role_name']) < 2 || mb_strlen($param['role_name']) > 20) {
-            return response()->json($this->fail('角色名长度在 2~20 个字符'));
-        }
 
         $where = [
-            ['parent_id', '=', $this->request->roleId],
+            ['parentId', '=', $this->request->roleId],
             ['id', '=', $id]
         ];
         if (! DB::table('admin_roles')->where($where)->exists()) {
             return response()->json($this->fail('该角色不存在'));
         }
 
-        //角色名不能重复
+        $roleName = $this->request->input('roleName', '');
+        if (! $roleName) {
+            return response()->json($this->fail('请输入角色名称'));
+        }
+
+        // 角色名不能重复
         $where = [
             ['id', '<>', $id],
-            ['role_name', '=', $param['role_name']]
+            ['parentId', '=', $this->request->roleId],
+            ['roleName', '=', $roleName]
         ];
         if (DB::table('admin_roles')->where($where)->exists()) {
             return response()->json($this->fail('该角色已存在'));
         }
 
-        if (DB::table('admin_roles')->where('id', $id)->update($param) === FALSE) {
+        $field = [
+            'roleName'=>$roleName,
+            'roleIntroduce'=>trim($this->request->input('roleIntroduce', '')),
+            'isAble'=>intval($this->request->input('isAble', 1)),
+            'updatedAt'=>date('Y-m-d H:i:s')
+        ];
+        if (DB::table('admin_roles')->where('id', $id)->update($field) === FALSE) {
             return response()->json($this->fail('编辑失败'));
         }
 
-        //写入日志
         $this->recordLog('编辑角色id:'.$id);
 
         return response()->json($this->success([], '编辑成功'));
@@ -129,23 +132,22 @@ class RoleController extends Controller
         $id = intval($this->request->input('id', 0));
 
         $where = [
-            ['parent_id', '=', $this->request->roleId],
+            ['parentId', '=', $this->request->roleId],
             ['id', '=', $id]
         ];
-        $data = DB::table('admin_roles')->where($where)->select('role_name')->first();
+        $data = DB::table('admin_roles')->where($where)->select('roleName')->first();
         if (! $data) {
             return response()->json($this->fail('该角色不存在'));
         }
 
-        //下级角色
+        // 下级角色ID，包含当前角色ID
         $ids = $this->_getSubordinate([], $id);
 
         DB::beginTransaction();
         try {
             DB::table('admin_roles')->whereIn('id', $ids)->delete();
-            DB::table('admin_role_permissions')->whereIn('role_id', $ids)->delete();
-            //写入日志
-            $this->recordLog('删除角色:'.$data->role_name.',及其下属角色');
+            DB::table('admin_role_permissions')->whereIn('roleId', $ids)->delete();
+            $this->recordLog('删除角色:'.$data->roleName.',及其下属角色');
 
             DB::commit();
             return response()->json($this->success([], '删除成功'));
@@ -167,7 +169,7 @@ class RoleController extends Controller
     {
         $ids[] = $id;
 
-        $data = DB::table('admin_roles')->where('parent_id', $id)->select('id')->get()->toArray();
+        $data = DB::table('admin_roles')->where('parentId', $id)->select('id')->get()->toArray();
         if ($data) {
             foreach ($data as $v) {
                 $ids = $this->_getSubordinate($ids, $v->id);
@@ -179,23 +181,24 @@ class RoleController extends Controller
 
     /**
     * 角色关系树
-    * @return json
     */
     public function tree()
     {
         $id = intval($this->request->input('id', 0));
-        $id = $id > 0 ? $id : $this->request->roleId;
+        if ($id <= 0) {
+            $id = $this->request->roleId;
+        }
 
-        $data = DB::table('admin_roles')->where('parent_id', $id)->select('id','role_name')->orderBy('id', 'desc')->get()->toArray();
+        $data = DB::table('admin_roles')->where('parentId', $id)->select('id','roleName')->orderBy('id', 'desc')->get()->toArray();
         if ($data) {
             foreach ($data as $k => $v) {
-                //默认为叶子节点
+                // 默认为叶子节点
                 $data[$k]->leaf = true;
-                $count = DB::table('admin_roles')->where('parent_id', $v->id)->count();
+                $count = DB::table('admin_roles')->where('parentId', $v->id)->count();
                 if ($count) {
                     $data[$k]->leaf = false;
-                    //当前节点下子节点个数
-                    $data[$k]->role_name .= '('.$count.')';
+                    // 当前节点下子节点个数
+                    $data[$k]->roleName .= '('.$count.')';
                 }
             }
         }
@@ -208,26 +211,26 @@ class RoleController extends Controller
     */
     public function permissionAssign()
     {
-        $role_id = intval($this->request->input('role_id', 0));
+        $roleId = intval($this->request->input('roleId', 0));
 
-        //分配前获取权限信息
-        $is_init = intval($this->request->input('is_init', 0));
-        if ($is_init == 1) {
-            return $this->_getPermissionInfo($role_id);
+        // 不能给自己分配权限
+        if ($roleId == $this->request->roleId) {
+            return response()->json($this->fail('不能给自己分配权限'));
         }
 
-        //验证1
-        if ($role_id == $this->request->roleId) {
-            return response()->json($this->fail('不能给自己授权'));
-        }
-
-        //验证2
+        // 必须是当前账号直属下级角色
         $where = [
-            ['id', '=', $role_id],
-            ['parent_id', '=', $this->request->roleId]
+            ['id', '=', $roleId],
+            ['parentId', '=', $this->request->roleId]
         ];
         if (! DB::table('admin_roles')->where($where)->exists()) {
             return response()->json($this->fail('该角色不存在'));
+        }
+
+        // 分配前获取权限信息
+        $isInit = intval($this->request->input('isInit', 0));
+        if ($isInit == 1) {
+            return $this->_getPermissionInfo($roleId);
         }
 
         //当前是提交的权限，可能不包含一级菜单
@@ -259,12 +262,45 @@ class RoleController extends Controller
 
     /**
     * 分配权限前获取权限信息
-    * @param int $role_id 被分配者角色ID
+    * @param int $roleId 被分配者角色ID
     * @return json
     */
-    private function _getPermissionInfo($role_id = 0)
+    private function _getPermissionInfo($roleId = 0)
     {
-        //菜单权限树、选中的节点
+        // 分配者菜单及被分配者权限
+        $menus = $checked = [];
+
+        // 分配者菜单（权限）
+        $assignPermission = [];
+        // 超管
+        if ($this->request->roleId == 1) {
+            $assign = DB::table('admin_menus')->select('id')->get()->toArray();
+            if ($assign) {
+                $assignPermission = array_map(function ($item) {
+                    return $item->id;
+                }, $assign);
+            }
+        } else {
+            $assign = DB::table('admin_role_permissions')->where('roleId', $this->request->roleId)->select('menuId')->get()->toArray();
+            if ($assign) {
+                $assignPermission = array_map(function ($item) {
+                    return $item->menuId;
+                }, $assign);
+            }
+        }
+
+        // 被分配者菜单（权限）
+        $assignedPermission = [];
+        $assigned = DB::table('admin_role_permissions')->where('roleId', $roleId)->select('menuId')->get()->toArray();
+        if ($assigned) {
+            $assignedPermission = array_map(function ($item) {
+                return $item->menuId;
+            }, $assigned);
+        }
+
+        return response()->json($this->success(['menus'=>$menus, 'checked'=>$checked]));
+
+        /*//菜单权限树、选中的节点
         $tree = $checked = [];
 
         //分配者菜单、权限
@@ -397,6 +433,6 @@ class RoleController extends Controller
             }
         }
 
-        return response()->json($this->success(['trees'=>$tree, 'checked'=>$checked]));
+        return response()->json($this->success(['trees'=>$tree, 'checked'=>$checked]));*/
     }
 }

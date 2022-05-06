@@ -21,7 +21,7 @@ class MenuController extends Controller
         // 父级ID
     	$parentId = intval($this->request->input('parentId', 0));
 
-        $data = DB::table('sys_menus')
+        $data = DB::table('admin_menus')
             ->where('parentId', $parentId)
             ->orderBy('sort')
             ->get()
@@ -30,7 +30,7 @@ class MenuController extends Controller
             foreach ($data as $k => $v) {
                 // 默认为叶子节点，即没有下一级
                 $data[$k]->leaf = true;
-                if (DB::table('sys_menus')->where('parentId', $v->id)->count()) {
+                if (DB::table('admin_menus')->where('parentId', $v->id)->count()) {
                     $data[$k]->leaf = false;
                 }
             }
@@ -56,7 +56,7 @@ class MenuController extends Controller
             return response()->json($this->fail($check['msg']));
         }
 
-        if (DB::table('sys_menus')->insertGetId($check['field']) <= 0) {
+        if (DB::table('admin_menus')->insertGetId($check['field']) <= 0) {
             return response()->json($this->fail('添加失败'));
         }
 
@@ -77,7 +77,7 @@ class MenuController extends Controller
         // 编辑
         if ($id > 0) {
             // 菜单是否存在
-            if (! DB::table('sys_menus')->where('id', $id)->exists()) {
+            if (! DB::table('admin_menus')->where('id', $id)->exists()) {
                 $ret['msg'] = '该菜单不存在';
                 return $ret;
             }
@@ -95,7 +95,7 @@ class MenuController extends Controller
         // 上级菜单ID
         $parentId = intval($this->request->input('parentId', 0));
         // 1、上级菜单有效性验证
-        if ($parentId > 0 && ! DB::table('sys_menus')->where('id', $parentId)->exists()) {
+        if ($parentId > 0 && ! DB::table('admin_menus')->where('id', $parentId)->exists()) {
             $ret['msg'] = '上级菜单不存在';
             return $ret;
         }
@@ -127,7 +127,7 @@ class MenuController extends Controller
         if ($id > 0) {
             $where[] = $idWhere;
         }
-        if (DB::table('sys_menus')->where($where)->exists()) {
+        if (DB::table('admin_menus')->where($where)->exists()) {
             $ret['msg'] = '同级下该菜单已存在';
             return $ret;
         }
@@ -140,7 +140,7 @@ class MenuController extends Controller
         if ($id > 0) {
             $where[] = $idWhere;
         }
-        if ($path && DB::table('sys_menus')->where($where)->exists()) {
+        if ($path && DB::table('admin_menus')->where($where)->exists()) {
             $ret['msg'] = '该路由地址已存在';
             return $ret;
         }
@@ -178,7 +178,7 @@ class MenuController extends Controller
         // 初始化，获取基本数据
         $init = $this->request->input('init', false);
         if ($init === true) {
-            $info = DB::table('sys_menus')->where('id', $id)->first();
+            $info = DB::table('admin_menus')->where('id', $id)->first();
             if (! $info) {
                 return response()->json($this->fail('菜单不存在'));
             }
@@ -200,7 +200,7 @@ class MenuController extends Controller
             return response()->json($this->fail($check['msg']));
         }
 
-        if (DB::table('sys_menus')->where('id', $id)->update($check['field']) === false) {
+        if (DB::table('admin_menus')->where('id', $id)->update($check['field']) === false) {
             return response()->json($this->fail('编辑失败'));
         }
 
@@ -227,7 +227,7 @@ class MenuController extends Controller
             return response()->json($this->fail($check['msg']));
         }
 
-        if (DB::table('sys_menus')->insertGetId($check['field']) <= 0) {
+        if (DB::table('admin_menus')->insertGetId($check['field']) <= 0) {
             return response()->json($this->fail('添加失败'));
         }
 
@@ -250,7 +250,7 @@ class MenuController extends Controller
         // 初始化，获取基本数据
         $init = $this->request->input('init', false);
         if ($init === true) {
-            $info = DB::table('sys_menus')->where('id', $id)->select('id','parentId','title','path','sort')->first();
+            $info = DB::table('admin_menus')->where('id', $id)->select('id','parentId','title','path','sort')->first();
             if (! $info) {
                 return response()->json($this->fail('权限不存在'));
             }
@@ -272,7 +272,7 @@ class MenuController extends Controller
             return response()->json($this->fail($check['msg']));
         }
 
-        if (DB::table('sys_menus')->where('id', $id)->update($check['field']) === false) {
+        if (DB::table('admin_menus')->where('id', $id)->update($check['field']) === false) {
             return response()->json($this->fail('编辑失败'));
         }
 
@@ -295,7 +295,7 @@ class MenuController extends Controller
 
         $ids[] = $parentId;
 
-        $data = DB::table('sys_menus')->where('id', $parentId)->select('parentId')->get()->toArray();
+        $data = DB::table('admin_menus')->where('id', $parentId)->select('parentId')->get()->toArray();
         if ($data) {
             foreach ($data as $v) {
                 $this->_getParentIds($v->parentId, $ids);
@@ -319,7 +319,7 @@ class MenuController extends Controller
         // 编辑
         if ($id > 0) {
             // 权限是否存在
-            if (! DB::table('sys_menus')->where('id', $id)->exists()) {
+            if (! DB::table('admin_menus')->where('id', $id)->exists()) {
                 $ret['msg'] = '该权限不存在';
                 return $ret;
             }
@@ -329,7 +329,7 @@ class MenuController extends Controller
 
         // 上级ID
         $parentId = intval($this->request->input('parentId', 0));
-        if (! DB::table('sys_menus')->where('id', $parentId)->exists()) {
+        if (! DB::table('admin_menus')->where('id', $parentId)->exists()) {
             $ret['msg'] = '上级ID不存在';
             return $ret;
         }
@@ -356,7 +356,7 @@ class MenuController extends Controller
         if ($id > 0) {
             $where[] = $idWhere;
         }
-        if (DB::table('sys_menus')->where($where)->exists()) {
+        if (DB::table('admin_menus')->where($where)->exists()) {
             $ret['msg'] = '同级下该权限名称已存在';
             return $ret;
         }
@@ -368,7 +368,7 @@ class MenuController extends Controller
         if ($id > 0) {
             $where[] = $idWhere;
         }
-        if (DB::table('sys_menus')->where($where)->exists()) {
+        if (DB::table('admin_menus')->where($where)->exists()) {
             $ret['msg'] = '该权限标识已存在';
             return $ret;
         }
@@ -399,7 +399,7 @@ class MenuController extends Controller
             ['parentId', '=', $parentId],
             ['type', '=', 1]
         ];
-        $data = DB::table('sys_menus')->where($where)->select('id','title')->orderBy('sort')->get()->toArray();
+        $data = DB::table('admin_menus')->where($where)->select('id','title')->orderBy('sort')->get()->toArray();
         if ($data) {
             foreach ($data as $k => $v) {
                 // 是否还有下级
@@ -407,7 +407,7 @@ class MenuController extends Controller
                     ['parentId', '=', $v->id],
                     ['type', '=', 1]
                 ];
-                if (DB::table('sys_menus')->where($where)->exists()) {
+                if (DB::table('admin_menus')->where($where)->exists()) {
                     $data[$k]->children = $this->_getMenus($v->id);
                 }
             }
@@ -423,7 +423,7 @@ class MenuController extends Controller
      * */
     private function _getChildrenMenuId($parentId = 0, &$ids = [])
     {
-        $data = DB::table('sys_menus')->where('parentId', $parentId)->select('id')->get()->toArray();
+        $data = DB::table('admin_menus')->where('parentId', $parentId)->select('id')->get()->toArray();
         if ($data) {
             foreach ($data as $v) {
                 $ids[] = $v->id;
@@ -443,7 +443,7 @@ class MenuController extends Controller
         // 菜单或权限ID
         $id = intval($this->request->input('id', 0));
 
-        $title = DB::table('sys_menus')->where('id', $id)->value('title');
+        $title = DB::table('admin_menus')->where('id', $id)->value('title');
         if (! $title) {
             return response()->json($this->fail('该菜单或权限不存在'));
         }
@@ -452,7 +452,7 @@ class MenuController extends Controller
         $ids = $this->_getChildrenMenuId($id);
         $ids[] = $id;
 
-        if (! DB::table('sys_menus')->whereIn('id', $ids)->delete()) {
+        if (! DB::table('admin_menus')->whereIn('id', $ids)->delete()) {
             return response()->json($this->fail('删除失败'));
         }
 

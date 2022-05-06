@@ -28,8 +28,8 @@ class AuthMiddleware
                     ['a.path', '=', $path],
                     ['b.roleId', '=', $request->roleId]
                 ];
-                $has = DB::table('sys_menus as a')
-                    ->join('sys_role_permissions as b', 'b.menuId', '=', 'a.id')
+                $has = DB::table('admin_menus as a')
+                    ->join('admin_role_permissions as b', 'b.menuId', '=', 'a.id')
                     ->where($where)
                     ->exists();
                 if (! $has) {

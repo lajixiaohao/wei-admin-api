@@ -22,7 +22,7 @@ class InitializeController extends Controller
     public function index()
     {
         // token验证通过，断定管理员存在
-        $data = DB::table('sys_admins')->where('id', $this->request->adminId)->select('account','trueName')->first();
+        $data = DB::table('admin_users')->where('id', $this->request->adminId)->select('account','trueName')->first();
         return response()->json($this->success(['menus'=>$this->_getRoleMenu(), 'userInfo'=>$data]));
     }
 
@@ -42,14 +42,14 @@ class InitializeController extends Controller
         ];
 
         if ($this->request->roleId === 1) {
-            $data = DB::table('sys_menus')->where($where)->select($this->field)->orderBy('sort')->get()->toArray();
+            $data = DB::table('admin_menus')->where($where)->select($this->field)->orderBy('sort')->get()->toArray();
         } else {
-            $menu = DB::table('sys_role_permissions')->where('roleId', $this->request->roleId)->select('menuId')->get()->toArray();
+            $menu = DB::table('admin_role_permissions')->where('roleId', $this->request->roleId)->select('menuId')->get()->toArray();
             if ($menu) {
                 $ids = array_map(function ($item) {
                     return $item->menuId;
                 }, $menu);
-                $data = DB::table('sys_menus')->whereIn('id', $ids)->where($where)->select($this->field)->orderBy('sort')->get()->toArray();
+                $data = DB::table('admin_menus')->whereIn('id', $ids)->where($where)->select($this->field)->orderBy('sort')->get()->toArray();
             }
         }
 
@@ -76,7 +76,7 @@ class InitializeController extends Controller
             ['isShow', '=', 1],
             ['type', '=', 1]
         ];
-        $data = DB::table('sys_menus')->select($this->field)->where($where)->orderBy('sort')->get()->toArray();
+        $data = DB::table('admin_menus')->select($this->field)->where($where)->orderBy('sort')->get()->toArray();
         if ($data) {
             foreach ($data as $k => $v) {
                 if ($ids && ! in_array($v->id, $ids)) {
@@ -103,6 +103,6 @@ class InitializeController extends Controller
             ['isShow', '=', 1],
             ['type', '=', 2]
         ];
-        return DB::table('sys_menus')->where($where)->select($this->field)->orderBy('sort')->get();
+        return DB::table('admin_menus')->where($where)->select($this->field)->orderBy('sort')->get();
     }
 }

@@ -58,7 +58,7 @@ class LoginController extends Controller
             ['isAble', '=', 1]
         ];
         // 管理员信息
-        $admin = DB::table('sys_admins')->where($where)->first();
+        $admin = DB::table('admin_users')->where($where)->first();
         if (! $admin) {
             return response()->json($this->fail('账号无效'));
         }
@@ -78,7 +78,7 @@ class LoginController extends Controller
             ['id', '=', $admin->roleId],
             ['isAble', '=', 1]
         ];
-        if (! DB::table('sys_roles')->where($where)->exists()) {
+        if (! DB::table('admin_roles')->where($where)->exists()) {
             return response()->json($this->fail('权限验证失败'));
         }
 
@@ -87,9 +87,9 @@ class LoginController extends Controller
             'adminId'=>$admin->id,
             'ip'=>inet_pton($this->request->getClientIp()),
             'device'=>$this->request->userAgent(),
-            'loginAt'=>time()
+            'loginAt'=>date('Y-m-d H:i:s')
         ];
-        $loginId = DB::table('sys_login_logs')->insertGetId($field);
+        $loginId = DB::table('admin_login_logs')->insertGetId($field);
         if ($loginId <= 0) {
             return response()->json($this->fail('登录失败，无法更新登录日志'));
         }

@@ -20,13 +20,8 @@ class DeptController extends Controller
     {
         $parentId = intval($this->request->input('parentId', 0));
 
-        $where = [
-            ['parentId', '=', $parentId],
-            ['isDeleted', '=', 0]
-        ];
-
-        $depts = DB::table('sys_depts')
-            ->where($where)
+        $depts = DB::table('admin_depts')
+            ->where('parentId', $parentId)
             ->orderBy('sort')
             ->get()
             ->toArray();
@@ -37,11 +32,7 @@ class DeptController extends Controller
                 $depts[$k]->leaf = true;
                 //直属部门数
                 $depts[$k]->cnum = 0;
-                $where = [
-                    ['parentId', '=', $v->id],
-                    ['isDeleted', '=', 0]
-                ];
-                $count = DB::table('sys_depts')->where($where)->count();
+                $count = DB::table('admin_depts')->where('parentId', $v->id)->count();
                 if ($count) {
                     $depts[$k]->leaf = false;
                     // 根部门不显示数量
@@ -55,11 +46,7 @@ class DeptController extends Controller
         // 部门总数，只在初始化时获取
         $deptNum = 0;
         if ($parentId <= 0) {
-            $where = [
-                ['parentId', '>', 0],
-                ['isDeleted', '=', 0]
-            ];
-        	$deptNum = DB::table('sys_depts')->where($where)->count();
+        	$deptNum = DB::table('admin_depts')->count();
         }
         $data = [
         	'dept'=>$depts,
@@ -77,11 +64,7 @@ class DeptController extends Controller
      * */
     private function _getChildrenDeptId($parentId = 0, &$ids = [])
     {
-        $where = [
-            ['parentId', '=', $parentId],
-            ['isDeleted', '=', 0]
-        ];
-        $data = DB::table('sys_depts')->where($where)->select('id')->get()->toArray();
+        $data = DB::table('admin_depts')->where('parentId', $parentId)->select('id')->get()->toArray();
         if ($data) {
             foreach ($data as $v) {
                 $ids[] = $v->id;
@@ -112,18 +95,17 @@ class DeptController extends Controller
         // 同级部门名称不能重复
         $where = [
             ['parentId', '=', $field['parentId']],
-            ['deptName', '=', $field['deptName']],
-            ['isDeleted', '=', 0]
+            ['deptName', '=', $field['deptName']]
         ];
-        if (DB::table('sys_depts')->where($where)->exists()) {
+        if (DB::table('admin_depts')->where($where)->exists()) {
             return response()->json($this->fail('同级下部门名称不能重复'));
         }
 
         $field['sort'] = intval($this->request->input('sort', 1));
         $field['deptIntroduce'] = trim($this->request->input('deptIntroduce', ''));
-        $field['createdAt'] = $field['updatedAt'] = time();
+        $field['createdAt'] = $field['updatedAt'] = date('Y-m-d H:i:s');
 
-        $insertId = DB::table('sys_depts')->insertGetId($field);
+        $insertId = DB::table('admin_depts')->insertGetId($field);
         if ($insertId <= 0) {
             return response()->json($this->fail('添加失败'));
         }
@@ -154,11 +136,7 @@ class DeptController extends Controller
         }
 
         // 部门是否存在
-        $where = [
-            ['id', '=', $id],
-            ['isDeleted', '=', 0]
-        ];
-        if (! DB::table('sys_depts')->where($where)->exists()) {
+        if (! DB::table('admin_depts')->where('id', $id)->exists()) {
             return response()->json($this->fail('部门不存在'));
         }
 
@@ -166,18 +144,17 @@ class DeptController extends Controller
         $where = [
             ['id', '<>', $id],
             ['parentId', '=', $parentId],
-            ['deptName', '=', $field['deptName']],
-            ['isDeleted', '=', 0]
+            ['deptName', '=', $field['deptName']]
         ];
-        if (DB::table('sys_depts')->where($where)->exists()) {
+        if (DB::table('admin_depts')->where($where)->exists()) {
             return response()->json($this->fail('同级下部门名称已存在'));
         }
 
         $field['sort'] = intval($this->request->input('sort', 1));
         $field['deptIntroduce'] = trim($this->request->input('deptIntroduce', ''));
-        $field['updatedAt'] = time();
+        $field['updatedAt'] = date('Y-m-d H:i:s');
 
-        if (! DB::table('sys_depts')->where('id', $id)->update($field)) {
+        if (! DB::table('admin_depts')->where('id', $id)->update($field)) {
             return response()->json($this->fail('编辑失败'));
         }
 
@@ -200,10 +177,9 @@ class DeptController extends Controller
         // 部门有效性以及禁止删除根部门
         $where = [
             ['id', '=', $id],
-            ['parentId', '>', 0],
-            ['isDeleted', '=', 0]
+            ['parentId', '>', 0]
         ];
-        $deptName = DB::table('sys_depts')->where($where)->value('deptName');
+        $deptName = DB::table('admin_depts')->where($where)->value('deptName');
         if (! $deptName) {
             return response()->json($this->fail('该部门不存在'));
         }
@@ -213,7 +189,7 @@ class DeptController extends Controller
         // 包含当前要删除的部门ID
         $ids[] = $id;
 
-        if (! DB::table('sys_depts')->whereIn('id', $ids)->update(['isDeleted'=>1, 'updatedAt'=>time()])) {
+        if (! DB::table('admin_depts')->whereIn('id', $ids)->delete()) {
             return response()->json($this->fail('删除失败'));
         }
 
