@@ -5,13 +5,13 @@
  Source Server Type    : MySQL
  Source Server Version : 80022
  Source Host           : localhost:3306
- Source Schema         : wei_admin
+ Source Schema         : wei-admin
 
  Target Server Type    : MySQL
  Target Server Version : 80022
  File Encoding         : 65001
 
- Date: 05/09/2021 17:05:55
+ Date: 06/05/2022 18:27:40
 */
 
 SET NAMES utf8mb4;
@@ -22,19 +22,19 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 DROP TABLE IF EXISTS `admin_roles`;
 CREATE TABLE `admin_roles`  (
-  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `parent_id` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '父级ID',
-  `role_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT '角色名',
-  `role_describe` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT '角色描述',
-  `is_able` tinyint(1) UNSIGNED NOT NULL DEFAULT 1 COMMENT '是否启用，1是0否',
-  `created_at` datetime NULL DEFAULT NULL,
-  `updated_at` datetime NULL DEFAULT NULL,
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `parentId` int UNSIGNED NOT NULL DEFAULT 0 COMMENT '父级ID',
+  `roleName` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '角色名称',
+  `roleIntroduce` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '角色介绍',
+  `isAble` tinyint UNSIGNED NOT NULL DEFAULT 1 COMMENT '是否启用，1是0否',
+  `createdAt` datetime NULL DEFAULT NULL,
+  `updatedAt` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '角色表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '角色表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of admin_roles
 -- ----------------------------
-INSERT INTO `admin_roles` VALUES (1, 0, '超级管理员', '超级管理员，拥有系统所有权限', 1, '2022-04-06 00:00:00', '2022-04-06 00:00:00');
+INSERT INTO `admin_roles` VALUES (1, 0, '超级管理员', '系统超管，拥有超级权限。', 1, '2022-05-06 11:06:26', '2022-05-06 11:06:27');
 
 SET FOREIGN_KEY_CHECKS = 1;
