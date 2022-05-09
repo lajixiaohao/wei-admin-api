@@ -452,11 +452,18 @@ class MenuController extends Controller
         $ids = $this->_getChildrenMenuId($id);
         $ids[] = $id;
 
-        if (! DB::table('admin_menus')->whereIn('id', $ids)->delete()) {
-            return response()->json($this->fail('删除失败'));
-        }
+        DB::beginTransaction();
+        try {
+            DB::table('admin_menus')->whereIn('id', $ids)->delete();
+            DB::table('admin_role_permissions')->whereIn('menuId', $ids)->delete();
+            $this->recordLog('删除菜单或权限：'.$title.'，累计删除：'.count($ids).'个');
 
-        $this->recordLog('删除菜单或权限：'.$title.'，累计删除：'.count($ids).'个');
+            DB::commit();
+            return response()->json($this->success([], '删除成功'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json($this->fail($this->errMessage));
+        }
 
         return response()->json($this->success([], '删除成功'));
     }

@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\DB;
 
 class RoleController extends Controller
 {
+    // 分配者权限ID
+    private $assignIds = [];
+    // 被分配者权限ID
+    private $assignedIds = [];
+
     public function __construct(Request $request) {
         $this->request = $request;
     }
@@ -241,16 +246,15 @@ class RoleController extends Controller
 
         $field = [];
         foreach ($ids as $v) {
-            $field[] = ['role_id'=>$role_id, 'menu_id'=>intval($v)];
+            $field[] = ['roleId'=>$roleId, 'menuId'=>intval($v)];
         }
 
         try {
             //先删除再分配
-            DB::table('admin_role_permissions')->where('role_id', $role_id)->delete();
+            DB::table('admin_role_permissions')->where('roleId', $roleId)->delete();
             DB::table('admin_role_permissions')->insert($field);
 
-            //写入日志
-            $this->recordLog('分配角色权限。被分配角色id='.$role_id);
+            $this->recordLog('分配角色权限。被分配角色id='.$roleId);
             
             return response()->json($this->success([], '分配成功'));
         } catch (\Exception $e) {
@@ -267,172 +271,84 @@ class RoleController extends Controller
     */
     private function _getPermissionInfo($roleId = 0)
     {
-        // 分配者菜单及被分配者权限
-        $menus = $checked = [];
-
-        // 分配者菜单（权限）
-        $assignPermission = [];
         // 超管
         if ($this->request->roleId == 1) {
             $assign = DB::table('admin_menus')->select('id')->get()->toArray();
             if ($assign) {
-                $assignPermission = array_map(function ($item) {
+                $this->assignIds = array_map(function ($item) {
                     return $item->id;
                 }, $assign);
             }
         } else {
             $assign = DB::table('admin_role_permissions')->where('roleId', $this->request->roleId)->select('menuId')->get()->toArray();
             if ($assign) {
-                $assignPermission = array_map(function ($item) {
+                $this->assignIds = array_map(function ($item) {
                     return $item->menuId;
                 }, $assign);
             }
         }
 
-        // 被分配者菜单（权限）
-        $assignedPermission = [];
         $assigned = DB::table('admin_role_permissions')->where('roleId', $roleId)->select('menuId')->get()->toArray();
         if ($assigned) {
-            $assignedPermission = array_map(function ($item) {
+            $this->assignedIds = array_map(function ($item) {
                 return $item->menuId;
             }, $assigned);
         }
 
-        return response()->json($this->success(['menus'=>$menus, 'checked'=>$checked]));
-
-        /*//菜单权限树、选中的节点
-        $tree = $checked = [];
-
-        //分配者菜单、权限
-        $assignPermission = [];
-        if ($this->request->roleId == 1) {
-            $assign = DB::table('admin_menus')->select('id')->get()->toArray();
-            if ($assign) {
-                $assignPermission = array_map(function ($item) {
-                    return $item->id;
-                }, $assign);
-            }
-        } else {
-            $assign = DB::table('admin_role_permissions')->where('role_id', $this->request->roleId)->select('menu_id')->get()->toArray();
-            if ($assign) {
-                $assignPermission = array_map(function ($item) {
-                    return $item->menu_id;
-                }, $assign);
-            }
-        }
-
-        //被分配者菜单、权限
-        $assignedPermission = [];
-        $assigned = DB::table('admin_role_permissions')->where('role_id', $role_id)->select('menu_id')->get()->toArray();
-        if ($assigned) {
-            $assignedPermission = array_map(function ($item) {
-                return $item->menu_id;
-            }, $assigned);
-        }
-
-        //1、获取一级菜单
+        // 获取一级菜单
         $where = [
-            ['parent_id','=',0],
-            ['is_show','=',1]
+            ['parentId', '=', 0],
+            ['isShow', '=', 1],
+            ['type', '=', 1]
         ];
-        $firstMenu = DB::table('admin_menus')
-          ->whereIn('id', $assignPermission)
-          ->where($where)
-          ->select('id', 'title')
-          ->orderBy('sort')
-        ->get()->toArray();
-        if ($firstMenu) {
-            foreach ($firstMenu as $k1 => $v1) {
-                $tree[$k1]['id'] = $v1->id;
-                $tree[$k1]['label'] = $v1->title;
-                $tree[$k1]['children'] = [];
-
-                //被分配者拥有的权限，默认选择
-                if (in_array($v1->id, $assignedPermission)) {
-                    $checked[] = $v1->id;
-                }
-
-                //二级菜单
-                $where = [
-                    ['parent_id','=',$v1->id],
-                    ['menu_type','=',1],
-                    ['is_show','=',1]
-                ];
-                $secondMenu = DB::table('admin_menus')
-                  ->where($where)
-                  ->select('id', 'title')
-                  ->orderBy('sort')
-                ->get()->toArray();
-                if ($secondMenu) {
-                    $c2 = [];
-                    foreach ($secondMenu as $k2 => $v2) {
-                        //禁止分配菜单管理
-                        if ($v2->id != 2 && in_array($v2->id, $assignPermission)) {
-                            $c2[$k2]['id'] = $v2->id;
-                            $c2[$k2]['label'] = $v2->title;
-                            $c2[$k2]['children'] = [];
-
-                            //被分配者拥有的权限
-                            if (in_array($v2->id, $assignedPermission)) {
-                                $checked[] = $v2->id;
-                            }
-
-                            //权限
-                            $thirdMenu = DB::table('admin_menus')
-                              ->where([['parent_id','=',$v2->id], ['menu_type','=',3]])
-                              ->select('id', 'title', 'menu_type')
-                              ->orderBy('sort')
-                            ->get()->toArray();
-                            if ($thirdMenu) {
-                                $c3 = [];
-                                foreach ($thirdMenu as $k3 => $v3) {
-                                    if (in_array($v3->id, $assignPermission)) {
-                                        $c3[$k3]['id'] = $v3->id;
-                                        $c3[$k3]['label'] = '【权限】'.$v3->title;
-                                        $c3[$k3]['children'] = [];
-
-                                        //被分配者拥有的权限
-                                        if (in_array($v3->id, $assignedPermission)) {
-                                            $checked[] = $v3->id;
-                                        }
-                                    }
-                                }
-                                $c2[$k2]['children'] = array_values($c3);
-                            }
-                        }
-                    }
-                    $tree[$k1]['children'] = array_values($c2);
-                } else {
-                    //二级权限
-                    $where = [
-                        ['parent_id','=',$v1->id],
-                        ['menu_type','=',3]
-                    ];
-                    $secondPermission = DB::table('admin_menus')
-                      ->where($where)
-                      ->select('id', 'title')
-                      ->orderBy('sort')
-                    ->get()->toArray();
-                    if ($secondPermission) {
-                        $c2 = [];
-                        foreach ($secondPermission as $k2 => $v2) {
-                            if (in_array($v2->id, $assignPermission)) {
-                                $c2[$k2]['id'] = $v2->id;
-                                $c2[$k2]['label'] = '【权限】'.$v2->title;
-                                $c2[$k2]['children'] = [];
-
-                                //被分配者拥有的权限
-                                if (in_array($v2->id, $assignedPermission)) {
-                                    $checked[] = $v2->id;
-                                }
-                            }
-                        }
-                        $tree[$k1]['children'] = array_values($c2);
-                    }
-                }
+        $menus = DB::table('admin_menus')->where($where)->whereIn('id', $this->assignIds)->select('id', 'title AS label')->orderBy('sort')->get()->toArray();
+        if ($menus) {
+            foreach ($menus as $k => $v) {
+                // 下级菜单或权限
+                $menus[$k]->children = $this->_getPermission($v->id);
             }
         }
 
-        return response()->json($this->success(['trees'=>$tree, 'checked'=>$checked]));*/
+        return response()->json($this->success(['menus'=>$menus, 'checked'=>$this->assignedIds]));
+    }
+
+    /**
+    * 递归获取下级菜单或权限
+    * @param int $parentId
+    * @return array
+    */
+    private function _getPermission($parentId = 0)
+    {
+        // 获取下级权限
+        $where = [
+            ['parentId', '=', $parentId],
+            ['type', '=', 3]
+        ];
+        $data = DB::table('admin_menus')->where($where)->whereIn('id', $this->assignIds)->select('id', 'title AS label')->orderBy('sort')->get()->toArray();
+        if ($data) {
+            foreach ($data as $k => $v) {
+                $data[$k]->label = '【权限】'.$data[$k]->label;
+            }
+            return $data;
+        }
+
+        // 获取下级菜单
+        $where = [
+            ['parentId', '=', $parentId],
+            ['isShow', '=', 1],
+            ['type', '=', 1]
+        ];
+        $data = DB::table('admin_menus')->where($where)->whereIn('id', $this->assignIds)->select('id', 'title AS label')->orderBy('sort')->get()->toArray();
+        if ($data) {
+            foreach ($data as $k => $v) {
+                // 禁止分配二级菜单，前端显示为禁用
+                if ($v->id === 5) {
+                    $data[$k]->disabled = true;
+                }
+                $data[$k]->children = $this->_getPermission($v->id);
+            }
+        }
+
+        return $data;
     }
 }
