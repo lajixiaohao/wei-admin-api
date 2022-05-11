@@ -1,7 +1,7 @@
 <?php
 /**
  * 岗位管理
- * 2021.8.24
+ * 2022.5.11
  */
 namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;
@@ -25,9 +25,9 @@ class PostController extends Controller
         $where = [];
 
         //岗位搜索
-        $name = trim($this->request->input('name', ''));
-        if ($name) {
-            $where[] = ['name', 'like', '%'.$name.'%'];
+        $postName = trim($this->request->input('postName', ''));
+        if ($postName) {
+            $where[] = ['postName', 'like', '%'.$postName.'%'];
         }
 
         $data['list'] = DB::table('admin_posts')
@@ -46,27 +46,28 @@ class PostController extends Controller
     */
     public function add()
     {
-        $name = trim($this->request->input('name', ''));
-        if (! $name) {
+        $postName = trim($this->request->input('postName', ''));
+        if (! $postName) {
             return response()->json($this->fail('请输入岗位名称'));
         }
 
-        if (DB::table('admin_posts')->where('name', $name)->exists()) {
+        if (DB::table('admin_posts')->where('postName', $postName)->exists()) {
             return response()->json($this->fail('该岗位已存在'));
         }
 
         $field = [
-            'name'=>$name,
+            'postName'=>$postName,
+            'postIntroduce'=>trim($this->request->input('postIntroduce', '')),
             'sort'=>intval($this->request->input('sort', 1)),
-            'is_able'=>intval($this->request->input('is_able', 1))
+            'isAble'=>intval($this->request->input('isAble', 1))
         ];
-        $field['created_at'] = $field['updated_at'] = date('Y-m-d H:i:s');
+        $field['createdAt'] = $field['updatedAt'] = date('Y-m-d H:i:s');
         $insertId = DB::table('admin_posts')->insertGetId($field);
         if ($insertId <= 0) {
             return response()->json($this->fail('添加失败'));
         }
 
-        $this->recordLog('添加岗位：'.$name);
+        $this->recordLog('添加岗位：'.$postName);
 
         return response()->json($this->success([], '添加成功'));
     }
@@ -78,24 +79,25 @@ class PostController extends Controller
     {
         $id = intval($this->request->input('id', 0));
 
-        $name = trim($this->request->input('name', ''));
-        if (! $name) {
+        $postName = trim($this->request->input('postName', ''));
+        if (! $postName) {
             return response()->json($this->fail('请输入岗位名称'));
         }
 
         $where = [
             ['id', '<>', $id],
-            ['name', '=', $name]
+            ['postName', '=', $postName]
         ];
         if (DB::table('admin_posts')->where($where)->exists()) {
             return response()->json($this->fail('该岗位已存在'));
         }
 
         $field = [
-            'name'=>$name,
+            'postName'=>$postName,
+            'postIntroduce'=>trim($this->request->input('postIntroduce', '')),
             'sort'=>intval($this->request->input('sort', 1)),
-            'is_able'=>intval($this->request->input('is_able', 1)),
-            'updated_at'=>date('Y-m-d H:i:s')
+            'isAble'=>intval($this->request->input('isAble', 1)),
+            'updatedAt'=>date('Y-m-d H:i:s')
         ];
         if (DB::table('admin_posts')->where('id', $id)->update($field) === FALSE) {
             return response()->json($this->fail('编辑失败'));
@@ -113,25 +115,17 @@ class PostController extends Controller
     {
         $id = intval($this->request->input('id', 0));
 
-        $data = DB::table('admin_posts')->where('id', $id)->select('name')->first();
-        if (! $data) {
+        $postName = DB::table('admin_posts')->where('id', $id)->value('postName');
+        if (! $postName) {
             return response()->json($this->fail('该岗位不存在'));
         }
 
-        DB::beginTransaction();
-        try {
-            DB::table('admin_posts')->where('id', $id)->delete();
-            DB::table('admin_users')->where('post_id', $id)->update(['post_id'=>0, 'updated_at'=>date('Y-m-d H:i:s')]);
-            //写入日志
-            $this->recordLog('删除岗位：'.$data->name);
-
-            DB::commit();
-            return response()->json($this->success([], '删除成功'));
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json($this->fail($this->errMessage));
+        if (! DB::table('admin_posts')->where('id', $id)->delete()) {
+            return response()->json($this->fail('删除失败'));
         }
 
-        return response()->json($this->fail('删除失败'));
+        $this->recordLog('删除岗位：'.$postName);
+
+        return response()->json($this->success([], '删除成功'));
     }
 }

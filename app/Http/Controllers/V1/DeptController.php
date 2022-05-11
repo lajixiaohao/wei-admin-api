@@ -57,25 +57,6 @@ class DeptController extends Controller
     }
 
     /**
-     * 获取下级所有部门的ID
-     * @param int $parentId
-     * @param array $ids
-     * @return array
-     * */
-    private function _getChildrenDeptId($parentId = 0, &$ids = [])
-    {
-        $data = DB::table('admin_depts')->where('parentId', $parentId)->select('id')->get()->toArray();
-        if ($data) {
-            foreach ($data as $v) {
-                $ids[] = $v->id;
-                $this->_getChildrenDeptId($v->id, $ids);
-            }
-        }
-
-        return $ids;
-    }
-
-    /**
      * 添加
      * */
     public function add()
@@ -185,7 +166,7 @@ class DeptController extends Controller
         }
 
         // 用于同时删除所有下级部门
-        $ids = $this->_getChildrenDeptId($id);
+        $ids = $this->getChildrenDeptId($id);
         // 包含当前要删除的部门ID
         $ids[] = $id;
 

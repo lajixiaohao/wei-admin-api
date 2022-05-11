@@ -36,6 +36,25 @@ class Controller extends BaseController
     }
 
     /**
+     * 获取下级所有部门的ID
+     * @param int $parentId
+     * @param array $ids
+     * @return array
+     * */
+    protected function getChildrenDeptId($parentId = 0, &$ids = [])
+    {
+        $data = DB::table('admin_depts')->where('parentId', $parentId)->select('id')->get()->toArray();
+        if ($data) {
+            foreach ($data as $v) {
+                $ids[] = $v->id;
+                $this->getChildrenDeptId($v->id, $ids);
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
     * 使用私钥解密
     * https://www.php.net/manual/zh/function.openssl-private-decrypt.php
     * @param string $str

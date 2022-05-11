@@ -122,7 +122,8 @@ class MenuController extends Controller
         // 3、同级下菜单名称不能重复
         $where = [
             ['parentId', '=', $parentId],
-            ['title', '=', $title]
+            ['title', '=', $title],
+            ['type', '<>', 3]
         ];
         if ($id > 0) {
             $where[] = $idWhere;
@@ -351,7 +352,8 @@ class MenuController extends Controller
         // 1、同级下权限名称不能重复
         $where = [
             ['parentId', '=', $parentId],
-            ['title', '=', $title]
+            ['title', '=', $title],
+            ['type', '=', 3]
         ];
         if ($id > 0) {
             $where[] = $idWhere;

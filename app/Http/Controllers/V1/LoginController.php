@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Redis;
 class LoginController extends Controller
 {
     // 登录会话过期时间(秒)
-    private $tokenExpire = 3600;
+    private $tokenExpire = 3600 * 3;
 
     public function __construct(Request $request) {
         $this->request = $request;
@@ -61,11 +61,6 @@ class LoginController extends Controller
         $admin = DB::table('admin_users')->where($where)->first();
         if (! $admin) {
             return response()->json($this->fail('账号无效'));
-        }
-
-        // 验证锁定
-        if ($admin->isLocked === 1) {
-            return response()->json($this->fail('该账号已被锁定'));
         }
 
         // 验证密码

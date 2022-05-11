@@ -246,7 +246,17 @@ class RoleController extends Controller
 
         $field = [];
         foreach ($ids as $v) {
-            $field[] = ['roleId'=>$roleId, 'menuId'=>intval($v)];
+            $menuId = intval($v);
+            // 必须继承至上级
+            $where = [
+                ['roleId', '=', $this->request->roleId],
+                ['menuId', '=', $menuId]
+            ];
+            if ($this->request->roleId != 1 && ! DB::table('admin_role_permissions')->where($where)->exists()) {
+                return response()->json($this->fail('非法分配权限'));
+            }
+            
+            $field[] = ['roleId'=>$roleId, 'menuId'=>$menuId];
         }
 
         try {
@@ -309,7 +319,10 @@ class RoleController extends Controller
             }
         }
 
-        return response()->json($this->success(['menus'=>$menus, 'checked'=>$this->assignedIds]));
+        // 角色名
+        $roleName = DB::table('admin_roles')->where('id', $roleId)->value('roleName');
+
+        return response()->json($this->success(['menus'=>$menus, 'checked'=>$this->assignedIds, 'roleName'=>$roleName]));
     }
 
     /**
