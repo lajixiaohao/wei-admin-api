@@ -1,7 +1,6 @@
 <?php
 /**
- * 登录
- * 2021.7.14
+ * 登录控制
  */
 namespace App\Http\Controllers\V1;
 
@@ -11,9 +10,6 @@ use Illuminate\Support\Facades\Redis;
 
 class LoginController extends Controller
 {
-    // 登录会话过期时间(秒)
-    private $tokenExpire = 3600 * 3;
-
     public function __construct(Request $request) {
         $this->request = $request;
     }
@@ -91,7 +87,7 @@ class LoginController extends Controller
 
         // 加密基本信息
         $data = [
-            'expire'=>time() + $this->tokenExpire,
+            'expire'=>time() + config('app.tokenExpire'),
             'data'=>[
                 'adminId'=>$admin->id,
                 'roleId'=>$admin->roleId,

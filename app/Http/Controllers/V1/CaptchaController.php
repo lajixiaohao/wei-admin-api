@@ -1,7 +1,6 @@
 <?php
 /**
  * 验证码管理
- * 2021.9.8
  */
 namespace App\Http\Controllers\V1;
 

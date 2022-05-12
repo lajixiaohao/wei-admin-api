@@ -1,7 +1,6 @@
 <?php
 /**
  * 岗位管理
- * 2022.5.11
  */
 namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;
@@ -24,7 +23,7 @@ class PostController extends Controller
 
         $where = [];
 
-        //岗位搜索
+        // 岗位搜索
         $postName = trim($this->request->input('postName', ''));
         if ($postName) {
             $where[] = ['postName', 'like', '%'.$postName.'%'];

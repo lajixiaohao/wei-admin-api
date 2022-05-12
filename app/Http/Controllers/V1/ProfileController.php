@@ -1,7 +1,6 @@
 <?php
 /**
- * 个人资料
- * 2022.4.15
+ * 个人资料管理
  */
 namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;
@@ -24,18 +23,18 @@ class ProfileController extends Controller
           ->select('a.parentId','a.account','a.trueName','a.createdAt','b.roleName AS role')
         ->first();
         if ($data) {
-            //上级管理员
+            // 上级管理员
             $data->superior = '';
             $superiorAdmin = DB::table('admin_users')->where('id', $data->parentId)->select('account','trueName')->first();
             unset($data->parentId);
             if ($superiorAdmin) {
                 $data->superior = $superiorAdmin->trueName ? $superiorAdmin->trueName : $superiorAdmin->account;
             }
-            //注册时间
-            $data->createdAt = date('Y-m-d', $data->createdAt);
-            //所属部门
+            // 注册时间
+            $data->createdAt = substr($data->createdAt, 0, 10);
+            // 所属部门
             $data->dept = DB::table('admin_depts')->where('id', $this->request->deptId)->value('deptName');
-            //所属职位
+            // 所属职位
             $data->post = DB::table('admin_posts')->where('id', $this->request->postId)->value('postName');
         }
 
@@ -47,7 +46,7 @@ class ProfileController extends Controller
     */
     public function modifyName()
     {
-        //姓名
+        // 姓名
         $name = $this->request->input('name', '');
         if (! $this->isValidName($name)) {
             return response()->json($this->fail('姓名输入有误'));
@@ -55,7 +54,7 @@ class ProfileController extends Controller
 
         $field = [
             'trueName'=>$name,
-            'updatedAt'=>time()
+            'updatedAt'=>date('Y-m-d H:i:s')
         ];
         if (DB::table('admin_users')->where('id', $this->request->adminId)->update($field) === FALSE) {
             return response()->json($this->fail('修改失败'));
@@ -81,15 +80,11 @@ class ProfileController extends Controller
 
             $field = [
                 'pwd'=>password_hash($pwd, PASSWORD_DEFAULT),
-                'updatedAt'=>time()
+                'updatedAt'=>date('Y-m-d H:i:s')
             ];
             DB::table('admin_users')->where('id', $this->request->adminId)->update($field);
 
-            //记录登出日志
-            $id = DB::table('admin_login_logs')->where('adminId', $this->request->adminId)->orderBy('id', 'desc')->limit(1)->value('id');
-            if ($id) {
-                DB::table('admin_login_logs')->where('id', $id)->update(['logoutAt'=>time()]);
-            }
+            DB::table('admin_login_logs')->where('id', $this->request->loginId)->update(['logoutAt'=>date('Y-m-d H:i:s')]);
 
             $this->recordLog('修改自己的登录密码');
 

@@ -76,6 +76,8 @@ class Controller extends BaseController
     */
     protected function isValidName($name = '')
     {
+        $name = htmlspecialchars($name);
+        
         if (preg_match('/^.{2,20}$/', $name)) {
             return true;
         }

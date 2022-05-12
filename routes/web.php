@@ -1,16 +1,6 @@
 <?php
-
-/** @var \Laravel\Lumen\Routing\Router $router */
-
-/*
-|--------------------------------------------------------------------------
-| Application Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register all of the routes for an application.
-| It is a breeze. Simply tell Lumen the URIs it should respond to
-| and give it the Closure to call when that URI is requested.
-|
+/**
+* 路由配置
 */
 
 $router->get('/', function () use ($router) {
@@ -23,9 +13,6 @@ $router->group(['namespace'=>'V1', 'prefix'=>'api'], function () use ($router) {
 	$router->post('login', 'LoginController@index');
 	// 获取验证码
 	$router->get('get-captcha', 'CaptchaController@get');
-	// 测试使用
-	$router->get('test', 'TestController@index');
-
 	//<^只需要验证token有效
 	$router->group(['middleware'=>'token'], function () use ($router) {
 		$router->get('initialize', 'InitializeController@index');
@@ -55,15 +42,6 @@ $router->group(['namespace'=>'V1', 'prefix'=>'api'], function () use ($router) {
 		$router->get('role/tree', 'RoleController@tree');
 		$router->post('role/permission-assign', 'RoleController@permissionAssign');
 		//^>
-		//<^管理员管理
-		$router->get('admin/list', 'AdminController@list');
-		$router->post('admin/add', 'AdminController@add');
-		$router->post('admin/edit', 'AdminController@edit');
-		$router->post('admin/remove', 'AdminController@remove');
-		$router->get('admin/tree', 'AdminController@tree');
-		$router->post('admin/modify-password', 'AdminController@modifyPassword');
-		$router->post('admin/change-takeover', 'AdminController@changeTakeover');
-		//^>
 		//<^部门管理
 		$router->get('dept/tree', 'DeptController@tree');
 		$router->post('dept/add', 'DeptController@add');
@@ -76,12 +54,21 @@ $router->group(['namespace'=>'V1', 'prefix'=>'api'], function () use ($router) {
 		$router->post('post/edit', 'PostController@edit');
 		$router->post('post/remove', 'PostController@remove');
 		//^>
+		//<^管理员管理
+		$router->get('admin/list', 'AdminController@list');
+		$router->post('admin/add', 'AdminController@add');
+		$router->post('admin/edit', 'AdminController@edit');
+		$router->post('admin/remove', 'AdminController@remove');
+		$router->get('admin/tree', 'AdminController@tree');
+		$router->post('admin/modify-password', 'AdminController@modifyPassword');
+		$router->post('admin/modify-superior', 'AdminController@modifySuperior');
+		$router->get('admin/export', 'AdminController@export');
+		//^>
 		//<^日志管理
 		$router->get('log/operation', 'LogController@operation');
 		$router->get('log/login', 'LogController@login');
-		$router->get('log/operation/export', 'LogController@exportOperationLog');
 		//^>
-		//<加密应用
+		//<应用示例
 		$router->get('encryption/rsa', 'EncryptionController@rsa');
 		//^>
 	});

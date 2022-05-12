@@ -11,7 +11,7 @@
  Target Server Version : 80022
  File Encoding         : 65001
 
- Date: 06/05/2022 18:27:11
+ Date: 12/05/2022 17:56:52
 */
 
 SET NAMES utf8mb4;
@@ -30,11 +30,11 @@ CREATE TABLE `admin_depts`  (
   `createdAt` datetime NULL DEFAULT NULL,
   `updatedAt` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`, `deptName`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '部门表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '部门表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of admin_depts
 -- ----------------------------
-INSERT INTO `admin_depts` VALUES (1, 0, '根部门', '根部门，非实际部门。', 1, '2022-05-06 00:00:00', '2022-05-06 00:00:00');
+INSERT INTO `admin_depts` VALUES (1, 0, '根部门', '根部门，非实际部门。', 1, '2022-05-12 00:00:00', '2022-05-12 00:00:00');
 
 SET FOREIGN_KEY_CHECKS = 1;

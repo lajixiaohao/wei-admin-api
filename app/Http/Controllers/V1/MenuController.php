@@ -1,7 +1,6 @@
 <?php
 /**
  * 菜单管理
- * 2022.4.17
  */
 namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;
@@ -51,7 +50,7 @@ class MenuController extends Controller
             return response()->json($this->success($data));
         }
 
-        $check = $this->_menuCheck();
+        $check = $this->_formCheck();
         if ($check['code'] === 1) {
             return response()->json($this->fail($check['msg']));
         }
@@ -60,7 +59,7 @@ class MenuController extends Controller
             return response()->json($this->fail('添加失败'));
         }
 
-        $this->recordLog('添加菜单：'.json_encode($check['field']));
+        $this->recordLog('添加菜单：'.$check['field']['title']);
 
         return response()->json($this->success([], '添加成功'));
     }
@@ -68,7 +67,7 @@ class MenuController extends Controller
     /**
     * 添加、编辑菜单基础验证
     */
-    private function _menuCheck($id = 0)
+    private function _formCheck($id = 0)
     {
         $ret = ['code'=>1, 'msg'=>'未知错误'];
 
@@ -196,7 +195,7 @@ class MenuController extends Controller
         }
 
         // 基础验证
-        $check = $this->_menuCheck($id);
+        $check = $this->_formCheck($id);
         if ($check['code'] === 1) {
             return response()->json($this->fail($check['msg']));
         }
@@ -232,7 +231,7 @@ class MenuController extends Controller
             return response()->json($this->fail('添加失败'));
         }
 
-        $this->recordLog('添加权限：'.json_encode($check['field']));
+        $this->recordLog('添加权限：'.$check['field']['path']);
 
         return response()->json($this->success([], '添加成功'));
     }

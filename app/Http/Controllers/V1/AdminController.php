@@ -1,11 +1,11 @@
 <?php
 /**
  * 管理员管理
- * 2022.5.11
  */
 namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Helps\ExportExcel;
 
 class AdminController extends Controller
 {
@@ -61,42 +61,6 @@ class AdminController extends Controller
     }
 
     /**
-    * 添加、编辑时懒加载部门
-    * @return json
-    */
-    public function _lazyLoadDepartment()
-    {
-        $departmentId = intval($this->request->input('department_id', 0));
-
-        $where = [
-            ['parent_id','=',$departmentId]
-        ];
-
-        //过滤初始化部门
-        if ($departmentId <= 0) {
-            $where = [
-                ['id','=',$this->request->departmentId]
-            ];
-        }
-
-        $list = DB::table('admin_departments')
-            ->where($where)
-            ->select('id','name')
-            ->get()
-            ->toArray();
-        if ($list) {
-            foreach ($list as $k => $v) {
-                $list[$k]->leaf = true;
-                if (DB::table('admin_departments')->where('parent_id', $v->id)->exists()) {
-                    $list[$k]->leaf = false;
-                }
-            }
-        }
-
-        return response()->json($this->success(['list'=>$list]));
-    }
-
-    /**
     * 添加
     */
     public function add()
@@ -118,7 +82,7 @@ class AdminController extends Controller
             return response()->json($this->fail('添加失败'));
         }
 
-        $this->recordLog('添加管理员:'.json_encode($check['field']));
+        $this->recordLog('添加管理员:'.$check['field']['account']);
 
         return response()->json($this->success([], '添加成功'));
     }
@@ -163,6 +127,9 @@ class AdminController extends Controller
     }
 
     /**
+    * 添加、编辑前验证
+    * @param int $id
+    * @return array
     */
     private function _formCheck($id = 0)
     {
@@ -282,7 +249,7 @@ class AdminController extends Controller
     }
 
     /**
-    * 获取当前账号下的部门
+    * 获取某个部门下的所有子部门
     * @param int $parentId
     * @param bool $init
     * @return array
@@ -306,27 +273,30 @@ class AdminController extends Controller
     */
     public function tree()
     {
+        // 管理员ID
         $id = intval($this->request->input('id', 0));
-        $id = $id > 0 ? $id : $this->request->adminId;
-
+        if ($id <= 0) {
+            $id = $this->request->adminId;
+        }
+        
         $data = [];
-        $res = DB::table('admin_users')->where('parent_id', $id)->select('id','account', 'true_name')->orderBy('id','desc')->get()->toArray();
+        $res = DB::table('admin_users')->where('parentId', $id)->select('id', 'account', 'trueName')->orderBy('id','desc')->get()->toArray();
         if ($res) {
             foreach ($res as $k => $v) {
                 $data[$k]['id'] = $v->id;
-                $data[$k]['account'] = $v->true_name ? $v->true_name : $v->account;
+                $data[$k]['label'] = $v->trueName ? $v->account.'【'.$v->trueName.'】' : $v->account;
                 //默认为叶子节点
                 $data[$k]['leaf'] = true;
-                $count = DB::table('admin_users')->where('parent_id', $v->id)->count();
+                $count = DB::table('admin_users')->where('parentId', $v->id)->count();
                 if ($count > 0) {
                     $data[$k]['leaf'] = false;
                     //当前节点下子节点个数
-                    $data[$k]['account'] .= '('.$count.')';
+                    $data[$k]['label'] .= '('.$count.')';
                 }
             }
         }
 
-        return response()->json($this->success(['list'=>$data]));
+        return response()->json($this->success($data));
     }
 
     /**
@@ -358,7 +328,7 @@ class AdminController extends Controller
             // 是否存在下级
             if (DB::table('admin_users')->where('parentId', $id)->exists()) {
                 $is_ok = false;
-                $msg = '管理员：“'.$account.'”，还有下级，禁止删除！';
+                $msg = '该账号：“'.$account.'”，还有下级，禁止删除！';
                 break;
             }
             $admins[] = $account;
@@ -411,66 +381,138 @@ class AdminController extends Controller
     /**
     * 变更下级接管账号
     */
-    public function changeTakeover() 
+    public function modifySuperior()
     {
-        //更换前获取数据或判断
-        $check = intval($this->request->input('check', 0));
+        // 原先接管账号
+        $oldAdminId = intval($this->request->input('oldAdminId', 0));
+        // 新接管账号
+        $newAdminId = intval($this->request->input('newAdminId', 0));
 
-        //判断是否有下级
-        if ($check == 1) {
-            //当前接管的账号
-            $admin_id = intval($this->request->input('admin_id', 0));
-            //有效性验证
-            $where = [
-                ['id','=',$admin_id],
-                ['parent_id','=',$this->request->adminId]
-            ];
-            if (! DB::table('admin_users')->where($where)->exists()) {
-                return response()->json($this->fail('该账号不存在'));
+        // 原先接管账号有效性验证
+        $where = [
+            ['id', '=', $oldAdminId],
+            ['parentId','=',$this->request->adminId]
+        ];
+        if (! DB::table('admin_users')->where($where)->exists()) {
+            return response()->json($this->fail('非法操作'));
+        }
+
+        // 是否存在下级
+        $exists = DB::table('admin_users')->where('parentId', $oldAdminId)->exists();
+
+        // 初始化
+        $init = $this->request->input('init', false);
+        if ($init === true) {
+            // 下级
+            $children = [];
+            // 存在下级
+            if ($exists) {
+                $where = [
+                    ['parentId', '=', $this->request->adminId],
+                    ['isAble', '=', 1]
+                ];
+                $res = DB::table('admin_users')->where($where)->select('id', 'account', 'trueName')->orderBy('id', 'desc')->get()->toArray();
+                if ($res) {
+                    foreach ($res as $k => $v) {
+                        $children[$k]['id'] = $v->id;
+                        $children[$k]['value'] = $v->trueName ? $v->account.'【'.$v->trueName.'】' : $v->account;
+                    }
+                }
             }
-            $exists = DB::table('admin_users')->where('parent_id', $admin_id)->exists();
-            return response()->json($this->success(['exists'=>$exists]));
-        }
-        //返回当前管理员下级
-        if ($check == 2) {
-            $where = [
-                ['parent_id','=',$this->request->adminId],
-                ['is_able','=',1]
+
+            $data = [
+                'hasChildren'=>$exists,
+                'children'=>$children
             ];
-            $list = DB::table('admin_users')->where($where)->select('id','account')->orderBy('id', 'desc')->get();
-            return response()->json($this->success(['list'=>$list]));
+
+            return response()->json($this->success($data));
         }
 
-        //提交更换
-        $old_admin_id = intval($this->request->input('old_admin_id', 0));
-        $new_admin_id = intval($this->request->input('new_admin_id', 0));
-        if ($old_admin_id == $new_admin_id) {
-            return response()->json($this->fail('请选择要变更的账号'));
+        // 新老账号相同
+        if ($oldAdminId == $newAdminId) {
+            return response()->json($this->success([], '操作成功，本次未做修改'));
         }
 
-        //老账号有效性验证
+        // 新账号必须是当前账号下直接账号
         $where = [
-            ['id','=',$old_admin_id],
-            ['parent_id','=',$this->request->adminId]
+            ['id', '=', $newAdminId],
+            ['parentId','=',$this->request->adminId]
         ];
         if (! DB::table('admin_users')->where($where)->exists()) {
-            return response()->json($this->fail('原账号不存在'));
-        }
-        //新账号有效性验证
-        $where = [
-            ['id','=',$new_admin_id],
-            ['parent_id','=',$this->request->adminId]
-        ];
-        if (! DB::table('admin_users')->where($where)->exists()) {
-            return response()->json($this->fail('新账号不存在'));
+            return response()->json($this->fail('新接管账号不存在'));
         }
 
-        if (! DB::table('admin_users')->where('parent_id', $old_admin_id)->update(['parent_id'=>$new_admin_id, 'updated_at'=>date('Y-m-d H:i:s')])) {
+        $field = [
+            'parentId'=>$newAdminId,
+            'updatedAt'=>date('Y-m-d H:i:s')
+        ];
+        if (DB::table('admin_users')->where('parentId', $oldAdminId)->update($field) === false) {
             return response()->json($this->fail('变更失败'));
         }
 
-        $this->recordLog('变更下级直属管理员。原管理员id='.$old_admin_id.'，新管理员id='.$new_admin_id);
+        $this->recordLog('变更下级直属管理员。原管理员id='.$oldAdminId.'，新管理员id='.$newAdminId);
 
-        return response()->json($this->success([], '变更成功'));
+        return response()->json($this->success([], '操作成功'));
+    }
+
+    /*
+    * 导出
+    */
+    public function export()
+    {
+        // 账号或姓名搜索
+        $keyword = trim($this->request->input('keyword', ''));
+        $like = '%'.$keyword.'%';
+
+        $data = DB::table('admin_users as a')
+          ->leftJoin('admin_roles as b', 'b.id', '=', 'a.roleId')
+          ->leftJoin('admin_depts as c', 'c.id', '=', 'a.deptId')
+          ->leftJoin('admin_posts as d', 'd.id', '=', 'a.postId')
+          ->where('a.parentId', $this->request->adminId)
+          ->where(function($query) use ($keyword, $like) {
+            if ($keyword) {
+                $query->where('a.account', 'like', $like)->orWhere('a.trueName', 'like', $like);
+            }
+          })
+          ->select('a.id','a.account','a.trueName','a.isAble','a.createdAt','b.roleName','c.deptName','d.postName')
+          ->orderBy('a.id', 'desc')
+          ->get()
+          ->toArray();
+
+        // 表头html
+        $account = DB::table('admin_users')->where('id', $this->request->adminId)->value('account');
+        $headHtml = '<tr><th colspan="8">管理员【'.$account.'】直属子账号信息'.($keyword ? '（关键词：'.$keyword.'）' : '').'</th></tr>';
+        // 表格html
+        $tableHtml = '<table border="1">'.$headHtml.'<tr><th>序号</th><th>账号</th><th>姓名</th><th>角色</th><th>部门</th><th>岗位</th><th>创建时间</th><th>状态</th></tr>';
+        // 样式html
+        $styleHtml = '.disable{color:red;}';
+
+        if ($data) {
+            foreach ($data as $k => $v) {
+                $tableHtml .= '<tr>';
+                $tableHtml .= '<td>'.($k+1).'</td>';
+                $tableHtml .= '<td>'.$v->account.'</td>';
+                $tableHtml .= '<td>'.$v->trueName.'</td>';
+                $tableHtml .= '<td>'.$v->roleName.'</td>';
+                $tableHtml .= '<td>'.$v->deptName.'</td>';
+                $tableHtml .= '<td>'.$v->postName.'</td>';
+                $tableHtml .= '<td>'.$v->createdAt.'</td>';
+                $tableHtml .= '<td>'.($v->isAble ? '正常' : '<span class="disable">禁用</span>').'</td>';
+                $tableHtml .= '</tr>';
+            }
+        } else {
+            $tableHtml .= '<tr><td colspan="8">暂无数据</td></tr>';
+        }
+
+        $tableHtml .= '</table>';
+        // 为防止中文乱码时，可加urlencode转义
+        $filename = time().'.xlsx';
+
+        return response()->stream(function () use ($tableHtml, $styleHtml){
+            echo ExportExcel::formatHtml($tableHtml, $styleHtml);
+        }, 200, [
+            'Content-Type'=>'application/octet-stream',
+            'Content-Disposition'=>'attachment; filename='.$filename
+        ]);
     }
 }

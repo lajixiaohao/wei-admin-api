@@ -1,7 +1,6 @@
 <?php
 /**
  * 退出登录
- * 2021.7.29
  */
 namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;

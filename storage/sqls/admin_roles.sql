@@ -11,7 +11,7 @@
  Target Server Version : 80022
  File Encoding         : 65001
 
- Date: 06/05/2022 18:27:40
+ Date: 12/05/2022 17:57:54
 */
 
 SET NAMES utf8mb4;
@@ -30,11 +30,11 @@ CREATE TABLE `admin_roles`  (
   `createdAt` datetime NULL DEFAULT NULL,
   `updatedAt` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '角色表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '角色表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of admin_roles
 -- ----------------------------
-INSERT INTO `admin_roles` VALUES (1, 0, '超级管理员', '系统超管，拥有超级权限。', 1, '2022-05-06 11:06:26', '2022-05-06 11:06:27');
+INSERT INTO `admin_roles` VALUES (1, 0, '超级管理员', '系统超管，拥有超级权限。', 1, '2022-05-12 00:00:00', '2022-05-12 00:00:00');
 
 SET FOREIGN_KEY_CHECKS = 1;

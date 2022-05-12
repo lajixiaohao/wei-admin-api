@@ -11,7 +11,7 @@
  Target Server Version : 80022
  File Encoding         : 65001
 
- Date: 06/05/2022 18:27:26
+ Date: 12/05/2022 17:57:14
 */
 
 SET NAMES utf8mb4;
@@ -25,7 +25,7 @@ CREATE TABLE `admin_operation_logs`  (
   `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `adminId` int UNSIGNED NOT NULL DEFAULT 0 COMMENT '管理员ID',
   `api` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '请求API',
-  `describe` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '操作描述',
+  `describe` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '操作描述',
   `ip` varbinary(16) NULL DEFAULT NULL COMMENT '请求IP',
   `device` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '操作设备',
   `createdAt` datetime NULL DEFAULT NULL,

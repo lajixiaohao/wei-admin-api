@@ -1,7 +1,7 @@
 <?php
 /**
  * 部门管理
- * 2022.4.15
+ * 不做层级控制，而是统一管理
  */
 namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;

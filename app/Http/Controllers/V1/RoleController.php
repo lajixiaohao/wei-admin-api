@@ -1,7 +1,6 @@
 <?php
 /**
  * 角色管理
- * 2022.5.6
  */
 namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;
@@ -189,6 +188,7 @@ class RoleController extends Controller
     */
     public function tree()
     {
+        // 角色ID
         $id = intval($this->request->input('id', 0));
         if ($id <= 0) {
             $id = $this->request->roleId;
@@ -208,7 +208,7 @@ class RoleController extends Controller
             }
         }
 
-        return response()->json($this->success(['list'=>$data]));
+        return response()->json($this->success($data));
     }
 
     /**

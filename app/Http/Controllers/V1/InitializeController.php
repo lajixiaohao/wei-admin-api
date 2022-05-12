@@ -1,7 +1,6 @@
 <?php
 /**
- * 初始化获取菜单和账户
- * 2022.4.14
+ * 初始化菜单和账户
  */
 namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;
@@ -94,7 +93,7 @@ class InitializeController extends Controller
     /**
     * 获取页面按钮级菜单
     * @param int $parentId
-    * @return json
+    * @return object
     */
     private function _getPageMenu($parentId = 0)
     {

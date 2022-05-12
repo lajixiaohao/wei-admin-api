@@ -1,7 +1,6 @@
 <?php
 /**
 * 数据库连接配置
-* 2021.9.8
 */
 return [
     'default' => env('DB_CONNECTION', 'mysql'),

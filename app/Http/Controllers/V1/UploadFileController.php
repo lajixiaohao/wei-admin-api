@@ -3,7 +3,6 @@
  * 文件上传
  * nginx应配置好client_max_body_size
  * php.ini应配置好upload_max_filesize,post_max_size
- * 2022.4.13
  */
 namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;

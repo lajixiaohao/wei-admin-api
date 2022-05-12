@@ -1,6 +1,6 @@
 <?php
 /**
-* 验证token
+* token验证
 * 验证不通过，将返回HTTP状态码：401
 */
 namespace App\Http\Middleware;
