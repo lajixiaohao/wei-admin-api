@@ -87,7 +87,7 @@ class LoginController extends Controller
 
         // 加密基本信息
         $data = [
-            'expire'=>time() + config('app.tokenExpire'),
+            'expire'=>time() + env('TOKEN_EXPIRE', 3600),
             'data'=>[
                 'adminId'=>$admin->id,
                 'roleId'=>$admin->roleId,

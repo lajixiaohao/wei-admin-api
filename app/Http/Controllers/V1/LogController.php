@@ -100,7 +100,7 @@ class LogController extends Controller
 
                 if ($value->id != $this->request->loginId && empty($value->logoutAt)) {
                     // 是否其他设备登录,token有效期1小时
-                    if ((time() - strtotime($value->loginAt)) < config('app.tokenExpire')) {
+                    if ((time() - strtotime($value->loginAt)) < env('TOKEN_EXPIRE', 3600)) {
                         $list[$key]->remarkType = 3;
                     } else {
                         $list[$key]->remarkType = 4;
