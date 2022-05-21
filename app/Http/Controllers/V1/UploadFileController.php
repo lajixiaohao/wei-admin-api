@@ -3,26 +3,28 @@
  * 文件上传
  * nginx应配置好client_max_body_size
  * php.ini应配置好upload_max_filesize,post_max_size
+ * 使用extension获取扩展名更安全，但可能会和客户端提供的扩展名不同，见
+ * https://learnku.com/docs/laravel/9.x/requests/12213#def622
  */
 namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;
 
 class UploadFileController extends Controller
 {
-    // 允许图片上传的类型
-    private $allowImageExtension = ['jpg', 'gif', 'png'];
+    // 允许图片上传的类型，请自行扩展
+    private $allowImageExtension = ['jpg'];
 
     // 允许图片上传的大小5M
     private $allowImageSize = 5 * 1024 * 1024;
 
-    // 允许视频上传的类型
+    // 允许视频上传的类型，请自行扩展
     private $allowVideoExtension = ['mp4'];
 
     // 允许视频上传的大小50M
     private $allowVideoSize = 50 * 1024 * 1024;
 
-    // 允许附件上传的类型
-    private $allowAttachmentExtension = ['zip', 'rar', 'docx', 'xlsx', 'pdf'];
+    // 允许附件上传的类型，请自行扩展
+    private $allowAttachmentExtension = ['zip'];
 
     // 允许附件上传的大小5M
     private $allowAttachmentSize = 5 * 1024 * 1024;
@@ -129,11 +131,11 @@ class UploadFileController extends Controller
         try {
             // 存储目录
             $dir = 'attachments/' . date('Y') . '/' . date('m');
-            $path = $this->request->file($file)->store($dir, env('ATTACHMENT_DISK', 'local'));
+            $path = $this->request->file($file)->storeAs($dir, $this->request->file($file)->getClientOriginalName(), env('ATTACHMENT_DISK', 'local'));
             $this->recordLog('上传附件：' . env('RESOURCE_URL', '') . $path);
             return response()->json($this->success(['path'=>$path]));
         } catch (\Exception $e) {
-            return response()->json($this->fail($this->errMessage));
+            return response()->json($this->fail($e->getMessage()));
         }
 
         return response()->json($this->fail());
