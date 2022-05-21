@@ -1,6 +1,6 @@
 # wei-admin-api
 
- wei-admin项目接口服务，基于Lumen8.3.4框架开发。 
+[wei-admin](https://github.com/lajixiaohao/wei-admin)项目接口服务，基于Lumen8.3.4框架开发。 
 
 项目使用说明：
 
@@ -12,11 +12,11 @@
 
 2. 项目基础配置
 
-   1）打开.env文件配置数据库（mysql、redis）链接、appkey、token、资源服务器、时区等
+   1）在根目录下新建`.env`文件，参考`.env.exmple`配置
 
-   2）打开configs/filesystem.php文件配置使用SFTP上传至资源服务器相关信息
+   2）非对称加密密钥对，存储在storage/keys目录下
 
-   3）生成非对称密钥对，存储在keys目录下
+   3）确保storage/logs目录权限为`0777`
 
 3. 必要的SQL文件位于目录：storage/sqls下
 
