@@ -17,8 +17,9 @@ $router->group(['namespace'=>'V1', 'prefix'=>'api'], function () use ($router) {
 	$router->group(['middleware'=>'token'], function () use ($router) {
 		$router->get('initialize', 'InitializeController@index');
 		$router->post('logout', 'LogoutController@index');
-		$router->post('upload-image', 'UploadFileController@image');
-		$router->post('upload-video', 'UploadFileController@video');
+		$router->post('upload/image', 'UploadFileController@image');
+		$router->post('upload/video', 'UploadFileController@video');
+		$router->post('upload/attachment', 'UploadFileController@attachment');
 		$router->get('profile', 'ProfileController@get');
 		$router->post('profile/modify-name', 'ProfileController@modifyName');
 		$router->post('profile/modify-password', 'ProfileController@modifyPassword');

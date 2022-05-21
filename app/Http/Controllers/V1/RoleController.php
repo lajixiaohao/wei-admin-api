@@ -354,7 +354,7 @@ class RoleController extends Controller
         $data = DB::table('admin_menus')->where($where)->whereIn('id', $this->assignIds)->select('id', 'title AS label')->orderBy('sort')->get()->toArray();
         if ($data) {
             foreach ($data as $k => $v) {
-                // 禁止分配二级菜单，前端显示为禁用
+                // 禁止分配菜单管理，前端显示为禁用
                 if ($v->id === 5) {
                     $data[$k]->disabled = true;
                 }
