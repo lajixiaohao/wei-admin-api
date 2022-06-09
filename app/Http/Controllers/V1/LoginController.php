@@ -7,6 +7,7 @@ namespace App\Http\Controllers\V1;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Crypt;
 
 class LoginController extends Controller
 {
@@ -19,19 +20,22 @@ class LoginController extends Controller
     */
     public function index()
     {
-        // 验证码处理
-        $uid = trim($this->request->input('uid', ''));
-        $captcha = intval($this->request->input('captcha', 0));
-
-        if (! $uid) {
-            return response()->json($this->fail('缺少uid'));
+        // 验证码标识
+        $cid = trim($this->request->input('cid', ''));
+        if (! $cid) {
+            return response()->json($this->fail('缺少验证码标识'));
         }
 
-        $res = Redis::get('captcha_'.$uid);
+        $res = Redis::get('cid_'.$cid);
         if (is_null($res)) {
             return response()->json($this->fail('验证码过期或无效'));
         }
-        Redis::del('captcha_'.$uid);
+
+        // 删除验证码缓存
+        Redis::del('cid_'.$cid);
+
+        // 验证码
+        $captcha = intval($this->request->input('captcha', 0));
 
         if (intval($res) !== $captcha) {
             return response()->json($this->fail('验证码不正确'));
@@ -97,11 +101,6 @@ class LoginController extends Controller
             ]
         ];
 
-        try {
-            $token = openssl_encrypt(json_encode($data), 'AES-256-ECB', env('TOKEN'));
-            return response()->json($this->success(['token'=>$token], '登录成功'));
-        } catch (\Exception $e) {
-            return response()->json($this->fail($this->errMessage));
-        }
+        return response()->json($this->success(['token'=>Crypt::encryptString(json_encode($data))], '登录成功'));
     }
 }

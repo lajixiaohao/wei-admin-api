@@ -20,69 +20,105 @@ class CaptchaController extends Controller
     public function get()
     {
     	try {
-    		//appkey
-	        $appkey = $this->request->input('appkey', '');
-	        if ($appkey != env('APP_KEY')) {
-	            return response()->json($this->fail('安全验证失败'));
-	        }
-
-	        //设置验证码图像的宽和高
-			$width = 120;
+	        // 图像宽度
+	        $width = 120;
+	        // 图像高度
 			$height = 40;
 
-			//定义运算数字
-			$a = mt_rand(1,10);
-			$b = mt_rand(1,10);
-
-			$res = $str = '';
-			$r = mt_rand(1, 3);
-			if ($r == 1) {
-				$res = $a + $b;
-				$str = $a.' + '.$b.' = ?';
-			}
-			if ($r == 2) {
-				$res = $a - $b;
-				$str = $a.' - '.$b.' = ?';
-			}
-			if ($r == 3) {
-				$res = $a * $b;
-				$str = $a.' x '.$b.' = ?';
-			}
-
-			//创建图像
-			$img = imagecreatetruecolor($width, $height);
-			//背景色
+	        // 创建图像
+	        $img = imagecreatetruecolor($width, $height);
+	        // 背景色
 			$colorBg = imagecolorallocate($img, 255, 255, 255);
-			//字体颜色
-			$colorString = imagecolorallocate($img, mt_rand(0, 200), mt_rand(0, 200), mt_rand(0, 200));
-			//填充背景色
+			// 填充颜色
 			imagefill($img, 0, 0, $colorBg);
 
-			//设置像素点
+			// 设置干扰点
 			for ($i = 0; $i < 100; $i++) {
-				imagesetpixel($img, mt_rand(0, $width - 1), mt_rand(0, $height - 1), imagecolorallocate($img, mt_rand(100, 200), mt_rand(100, 200), mt_rand(100, 200)));
+				$pixColor = imagecolorallocate($img, mt_rand(0, 255), mt_rand(0, 255), mt_rand(0, 255));
+				imagesetpixel($img, mt_rand(0, $width), mt_rand(0, $height), $pixColor);
 			}
 
-			//设置字体
-			imagettftext($img, 16, 0, mt_rand(5, 15), mt_rand(20, 35), $colorString, storage_path('font/SigmarOne.ttf'), $str);
+			// 设置干扰线
+			for ($i = 0; $i < 2; $i++) {
+				$lineColor = imagecolorallocate($img, mt_rand(0, 255), mt_rand(0, 255), mt_rand(0, 255));
+				imageline($img, mt_rand(0, $width), mt_rand(0, $height), mt_rand(0, $width), mt_rand(0, $height), $lineColor);
+			}
 
+			// 定义运算符
+			$operator = ['+', '-', '×'];
+			$operatorLen = count($operator);
+
+			// 定义运算取值范围的数组
+			$num = range(1, 20);
+			$numLen = count($num);
+
+			// 存放验证码
+			$code = [];
+			for ($i = 0; $i < $operatorLen; $i++) { 
+				if ($i == 1) {
+					// 取运算符
+					$code[] = $operator[mt_rand(0, $operatorLen - 1)];
+				} else {
+					// 取计算数值
+					$code[] = $num[mt_rand(0, $numLen - 1)];
+				}
+			}
+			// 插入运算提示
+			array_push($code, '=', '?');
+
+			// 文字大小
+			$fontSize = 16;
+			// 文字起始x坐标
+			$x = 24;
+
+			// 写入图片
+			for ($i = 0; $i < 5; $i++) { 
+				// 字体颜色
+				$fontColor = imagecolorallocate($img, mt_rand(0, 200), mt_rand(0, 200), mt_rand(0, 200));
+				imagettftext($img, $fontSize, mt_rand(-5, 5), $x * $i + mt_rand(0, 5), 30, $fontColor, storage_path('font/elephant.ttf'), $code[$i]);
+			}
+
+			// 获取图片流
 			ob_start();
 			imagejpeg($img);
 			$imgData = ob_get_contents();
 			ob_end_clean();
-			//图片base64
+
+			// 构造图片base64
 			$imgBase64 = 'data:image/jpeg;base64,'.chunk_split(base64_encode($imgData));
 
+			// 验证码标识
+			$cid = uniqid();
 
-			//唯一id
-			$uid = uniqid();
-			
-			//使用redis存储结果会话
-			Redis::setex('captcha_'.$uid, 180, $res);
+			// 使用redis存储结果会话
+			Redis::setex('cid_'.$cid, 180, $this->_getRes($code));
 
-			return response()->json($this->success(['uid'=>$uid, 'img'=>$imgBase64]));
+			return response()->json($this->success(['cid'=>$cid, 'img'=>$imgBase64]));
     	} catch (\Exception $e) {
     		return response()->json($this->fail($e->getMessage()));
     	}
+    }
+
+    /**
+     * 获取运算结果
+     * @param array $code
+     * @return int
+     * */
+    private function _getRes($code = []) 
+    {
+    	$res = '';
+    	switch ($code[1]) {
+    		case '+':
+    			$res = $code[0] + $code[2];
+    		break;
+
+    		case '-':
+    			$res = $code[0] - $code[2];
+    		break;
+
+    		default:
+    			$res = $code[0] * $code[2];
+    	}
+    	return $res;
     }
 }

@@ -7,6 +7,8 @@ namespace App\Http\Middleware;
 
 use Closure;
 use App\Helps\ApiResponse;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Facades\Crypt;
 
 class TokenMiddleware
 {
@@ -21,18 +23,10 @@ class TokenMiddleware
      */
     public function handle($request, Closure $next)
     {
-        $token = $request->header('token', '');
-        if (! $token) {
-            return response()->json($this->fail('Token Missing'), 401);
-        }
-
         try {
-            $token = openssl_decrypt($token, 'AES-256-ECB', env('TOKEN'));
-            if ($token === false) {
-                return response()->json($this->fail('Token Involid'), 401);
-            }
+            $decrypted = Crypt::decryptString($request->header('token', ''));
 
-            $token = json_decode($token, true);
+            $token = json_decode($decrypted, true);
 
             // 验证是否过期
             if ($token['expire'] < time()) {
@@ -42,7 +36,7 @@ class TokenMiddleware
             foreach ($token['data'] as $k => $v) {
                 $request->$k = $v;
             }
-        } catch (\Exception $e) {
+        } catch (\DecryptException $e) {
             return response()->json($this->fail($this->errMessage), 401);
         }
 
