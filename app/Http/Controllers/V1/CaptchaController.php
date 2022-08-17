@@ -39,17 +39,17 @@ class CaptchaController extends Controller
 			}
 
 			// 设置干扰线
-			for ($i = 0; $i < 2; $i++) {
-				$lineColor = imagecolorallocate($img, mt_rand(0, 255), mt_rand(0, 255), mt_rand(0, 255));
-				imageline($img, mt_rand(0, $width), mt_rand(0, $height), mt_rand(0, $width), mt_rand(0, $height), $lineColor);
-			}
+			// for ($i = 0; $i < 2; $i++) {
+			// 	$lineColor = imagecolorallocate($img, mt_rand(0, 255), mt_rand(0, 255), mt_rand(0, 255));
+			// 	imageline($img, mt_rand(0, $width), mt_rand(0, $height), mt_rand(0, $width), mt_rand(0, $height), $lineColor);
+			// }
 
 			// 定义运算符
 			$operator = ['+', '-', '×'];
 			$operatorLen = count($operator);
 
 			// 定义运算取值范围的数组
-			$num = range(1, 20);
+			$num = range(1, 9);
 			$numLen = count($num);
 
 			// 存放验证码
@@ -67,7 +67,7 @@ class CaptchaController extends Controller
 			array_push($code, '=', '?');
 
 			// 文字大小
-			$fontSize = 16;
+			$fontSize = 14;
 			// 文字起始x坐标
 			$x = 24;
 
